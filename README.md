@@ -4,12 +4,15 @@
 
 or view screenshots.
 
-Inline-style: 
+Interactive Graph Example: 
 ![alt text](https://github.com/k-gintaras/interactive-graph/blob/master/public_html/screenshots/interactive%20test.JPG "Interactive Graph Example")
-
-
-****
-
+***
+antagonists Example: 
+![alt text](https://github.com/k-gintaras/interactive-graph/blob/master/public_html/screenshots/antagonists2.JPG")
+***
+binding assay Example: 
+![alt text](https://github.com/k-gintaras/interactive-graph/blob/master/public_html/screenshots/binding%20assay%20%202.JPG "Interactive Graph Example")
+***
 ## To install you need:
  to take the folder of this soft (with or without git) and put it in the server
  to create database from given sql or modify (studentDBM and lecturerDBM to store and retrieve data in other way)
