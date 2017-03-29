@@ -3,7 +3,7 @@
 ## To test it either run it on server and view demo links in the index.html
 
 or view screenshots.
-
+![alt text](https://github.com/k-gintaras/interactive-graph/tree/master/public_html/screenshots/interractive test.JPG "Interactive Graph Example")
 ****
 
 ## To install you need:
