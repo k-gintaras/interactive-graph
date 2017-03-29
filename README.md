@@ -1,5 +1,7 @@
 To find out "why" scroll to the bottom where it is explained
+
 To test it either run it on server and view demo links in the index.html
+
 or view screenshots.
 
 ****
