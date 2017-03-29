@@ -8,7 +8,7 @@ Interactive Graph Example:
 ![alt text](https://github.com/k-gintaras/interactive-graph/blob/master/public_html/screenshots/interactive%20test.JPG "Interactive Graph Example")
 ***
 antagonists Example: 
-![alt text](https://github.com/k-gintaras/interactive-graph/blob/master/public_html/screenshots/antagonists2.JPG")
+![alt text](https://github.com/k-gintaras/interactive-graph/blob/master/public_html/screenshots/antagonists2.JPG "Interactive Graph Example")
 ***
 binding assay Example: 
 ![alt text](https://github.com/k-gintaras/interactive-graph/blob/master/public_html/screenshots/binding%20assay%20%202.JPG "Interactive Graph Example")
