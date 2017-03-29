@@ -5,7 +5,7 @@
 or view screenshots.
 
 Inline-style: 
-![alt text](https://github.com/k-gintaras/interactive-graph/tree/master/public_html/screenshots/interractive test.JPG "Interactive Graph Example")
+![alt text](https://github.com/k-gintaras/interactive-graph/blob/master/public_html/screenshots/interactive%20test.JPG "Interactive Graph Example")
 
 
 ****
