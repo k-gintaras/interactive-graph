@@ -1,3 +1,9 @@
+To find out "why" scroll to the bottom where it is explained
+To test it either run it on server and view demo links in the index.html
+or view screenshots.
+
+****
+
 To install you need:
  to take the folder of this soft (with or without git) and put it in the server
  to create database from given sql or modify (studentDBM and lecturerDBM to store and retrieve data in other way)
