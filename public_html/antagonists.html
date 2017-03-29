@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<!--/**
+* The MIT License (MIT) Copyright (c)
+* 
+* <2016><Gintaras Koncevicius>(@author Ubaby)
+* 
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+* 
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+* 
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+* SOFTWARE.
+*/-->
+<html lang='en'>
+    <head>
+        <title>Antagonist Exercise Page</title>
+        <meta property='og:title' content="Cell Receptor and Drug Simulation"/>
+        <meta property='og:site_name' content='roflit.com'/>
+        <meta property='og:type' content='website'/>
+        <meta charset='UTF-8'>
+        <meta name='author' content='Ubaby'>
+        <link rel='shortcut icon' href='favicon.ico' type='image/x-icon'/>
+        <link id='mainStyle' href='styles.css' rel='stylesheet' type='text/css'/>
+        <link rel="icon" type="image/x-icon" href="favicon.ico">
+        <style>
+            body{
+                background-image: url("siteImages/bgr4.JPG");
+                background-color: #cccccc;
+                background-size:cover;
+            }
+
+            textarea{
+                /*width:50px;*/
+                height:20px;
+                resize: none;
+                margin:0px;
+                padding:0px;
+                display:block;//qq
+                border-style:solid;
+                border-width:1px 1px 1px 1px;
+                border-radius: 5px;
+                border-style: none solid solid none;
+                width: 100%;
+            }
+
+            .nicetd{
+                background-color:white;
+                margin:15px;
+                border-color: rgb(200,200,200);
+                border-radius:5px;
+                border-style:solid;
+                border-width:1px 1px 1px 1px;
+                border-color:white darkgrey darkgrey lightgrey ;
+                box-shadow: 2px 2px 10px 0px black;
+            }
+        </style>
+    </head>
+    <body>
+        <script src='javascript/ugraph.js' type='text/javascript'></script>
+        <script src='javascript/ufunctions.js' type='text/javascript'></script>
+        <script src='javascript/antagonist-exercise-data.js' type='text/javascript'></script>
+        <script src='javascript/helpfulFunctions.js' type='text/javascript'></script>
+        <script>
+            //GLOBAL variables from custom library at ufunctions.js
+            var color = logo(), color2 = logo2(), cv = H.cnv, canvasObjects = [], resp = "", cvobj,
+                    ran = H.ran, check = H.check.nearMouse,
+                    el = H.el, st = el.st, str = H.str, cls = el.cls,
+                    num = H.num, o = H.obj, arr = H.arr,
+                    scr = getScreen(), movableElement = "",
+                    fullRadian = Math.PI * 2, canMove = false, movableElement = "";
+            function error(e) {
+                check(e);
+                var id = "checkNearMouse";
+                st(id, "backgroundColor", color.red);
+            }
+
+//GRAPH USAGE
+            var startingGraphOneSettings = {
+                canvas: "", //mandatory
+                data: exercise.dataOne, //or scale, mandatory
+//THE REST SETTINGS ARE OPTIONAL
+//             setGraphSizeByPieces: true, //by pixels if false
+//             w: 71, //uneven
+//             h: 71, //uneven
+//             x:150,
+//             y:150,
+                offsetX: 0.001, //non zero
+                offsetY: 0.001, //non zero
+                precision: 10, //uneven
+                userCanDraw: true,
+                displayDataPoints: false,
+                displayLessNumbers: true,
+                roundByDigitCount: 2, //how many digits to round the numbers
+                displayNumbersEach: 0.5,
+//                //when displaying less numbers you can use these to align them
+//                bigGridWidth: 5,
+//                bigGridHeight: 5,
+                displayXEach: 0.5,
+                displayYEach: 10,
+                roundXDigits: 2,
+                roundYDigits: 0,
+                displayDataSplines: false,
+                drawSplineMarkers: true,
+                infoNearAxis: "",
+                infoNearMouse: "",
+//                showLastClickedCoordinate: true,
+                showFps: false
+            };
+
+            var startingGraphTwoSettings = {
+                canvas: "", //mandatory
+                data: exercise.dataTwo, //or scale, mandatory
+//THE REST SETTINGS ARE OPTIONAL
+//             setGraphSizeByPieces: true, //by pixels if false
+//             w: 71, //uneven
+//             h: 71, //uneven
+//             x:150,
+//             y:150,
+                offsetX: 0.001, //non zero
+                offsetY: 0.001, //non zero
+                precision: 10, //uneven
+                userCanDraw: true,
+                displayDataPoints: false,
+                displayLessNumbers: false,
+                roundByDigitCount: 2, //how many digits to round the numbers
+                displayNumbersEach: 0.1,
+//                //when displaying less numbers you can use these to align them
+                bigGridWidth: 10 * 5,
+                bigGridHeight: 10 * 5,
+                displayXEach: 0.1,
+                displayYEach: 0.05,
+                roundXDigits: 2,
+                roundYDigits: 2,
+                displayDataSplines: false,
+                drawSplineMarkers: true,
+                infoNearAxis: "",
+                infoNearMouse: "",
+//                showLastClickedCoordinate: true,
+                showFps: false
+            };
+//----------------------------------------------------------------------------------------------------------------
+            var mc = "mainContainer", gc = "graphContainer", canvasId = "graph";
+            var graphOne = null;
+            var graphTwo = null;
+            var currentGraph = null;
+            var graphOneLiveSettings = null;
+            var graphTwoLiveSettings = null;
+            var userColor = color.red;
+            var student = {pw: "", name: ""};
+            var savedGraphTwo = false;
+
+            var helpMessage = "Same as agonist graph.";
+            var queryColumnSplitter = "stringToSplitQuery";
+            var userInputsSplitter = "userInputsSplitter";
+            var imageSplitIndicator = "thisStringHasImage";
+            var defaultUserNoValue = "0";
+            var graphContainerBackgroundColor = "rgba(250,250,250,0.5)";
+
+            var antagonistSubmission_POST = "studentSubmitAntagonist";
+            var login_POST = "studentLogin";
+            var goodLogin_RESPONSE = "Correct Password.";
+
+//MAIN
+//DEBUG
+            enableLogin();
+//            student.name = "ubaby";//Math.random()*1000;
+//            student.pw = "111";
+//            main();
+
+            function enableLogin() {
+                var id = "login";
+                createContainer(id);
+                createInput("user", id, "Enter Student Id/ Ids", "");
+                createInput("password", id, "Enter Excercise Password", "");
+                var e = el.get("inputuser");
+                e.setAttribute("placeholder", "u1234567,u1234567");
+                createButton("Start", id, color.green, function () {
+                    var user = clean(el.from("inputuser"));
+                    if (user.length > 2) {
+                        student.student = user;
+                        var pw = el.from("inputpassword");
+                        pw = clean(pw);
+                        student.pw = pw;
+                        submVal(login_POST, pw);
+                    } else {
+                        error("Username is too short.");
+                        el.rem(id);
+                        enableLogin();
+                    }
+                });
+                toCorner(id);
+            }
+
+            function submVal(key, val) {
+                var post = key + "=" + val;
+                var page = "studentDBM.php";
+                var connection = new serverClient(page, post);
+                connection.connect();
+                manageLateReply();
+                var tempInterval = setInterval(function () {
+                    resp = getResponse();
+                    if (resp !== "") {
+                        clearInterval(tempInterval);
+                        clearTimeout(lateChecker);
+                        var responseData = resp.split("Response");
+//                        var type = responseData[0];
+                        var data = responseData[1];
+                        if (data === goodLogin_RESPONSE) {
+                            el.rem("login");
+                            main();
+                        } else {
+                            check(resp);
+                        }
+                    }
+                }, 500);
+            }
+
+            var lateReply = true;
+            var lateChecker = "";
+            function manageLateReply() {
+                if (lateReply) {
+                    lateChecker = setTimeout(function () {
+                        if (!resp) {
+                            error("3 seconds passed, slow internet or wrong password.");
+                        }
+                    }, 3000);
+                }
+                lateReply = false;
+            }
+
+            //main();
+            function main() {
+                initScreenSpace(scr.w, scr.h);
+                createHeader();
+                el.div(mc);
+                createInputTableContainer();
+                setupGraph();
+            }
+
+            function createInputTableContainer() {
+                var matrix = getExcerciseMatrix();
+                var all = "<table BORDER=0 CELLPADDING=0 CELLSPACING=5 WIDTH=100% style=\"border-color:lightgrey\">";
+                all += toSpecialRow(3, exercise.tableTitle, 3, "nicetd");
+                for (var i = 0; i < matrix.length; i++) {
+                    all += toHTMLRow(getRow(matrix, i), i);
+                }
+                all += "</table>";
+                var id = "inputsContainer";
+                createContainer(id, mc, "transparent");
+                st(id, "top", getScreenSpace().top + "px");
+                el.inn(id, all);
+                el.st(id, "width", 400 + "px");
+                st(id, "position", "absolute");
+                var ct = el.get(id);
+                var w = ct.offsetWidth - 2;
+                updateScreenSpace(w, 0);
+            }
+
+            function createHeader() {
+                var id = "header", story = "story";
+                el.div(id);
+                cls(id, "container border shadow");
+                createText("Student: " + student.name, "header");
+                createContainer(story, id, "transparent");
+                st(story, "maxWidth", scr.w / 2 + "px");
+                createText(exercise.story, story, "rgb(0,0,0)", scr.w / 2, 5);
+
+                createButton("Drawing Menu", id, color2.green, function () {
+                    manageDrawingMenu();
+                });
+
+                createButton("Settings", id, color2.green, function () {
+                    manageSettingsMenu();
+                });
+
+                createButton("ChangePlot", id, color2.green, function () {
+                    changePlot();
+                });
+
+                enableSubmission();
+                var h = el.get(id).offsetHeight - 2;
+                st(id, "width", scr.w - getScreenSpace().marginBorder * 2 + "px");
+                st(id, "height", h + "px");
+                updateScreenSpace(0, h);
+            }
+
+            function enableSubmission() {
+                var typeOfSubmission = "antagonist";
+                var name = student.name;
+                var bid = "Submit";
+                var functionToSubmit = function () {
+                    changePlot();
+                    changePlot();
+                    clearInterval(interval);
+                    var userInputs = getAllInputs();
+                    if (!savedGraphTwo) {
+                        plotTwoDataUrl = el.get(canvasId).toDataURL("image/png");
+                    }
+                    var all = name + queryColumnSplitter + typeOfSubmission + queryColumnSplitter + userInputs + imageSplitIndicator + plotOneDataUrl + imageSplitIndicator + plotTwoDataUrl;
+                    submVal(antagonistSubmission_POST, student.pw + "stringToSplitPasswordData" + all);
+                };
+
+                if (!el.is(bid)) {
+                    createButton(bid, "header", color.green, functionToSubmit);
+                }
+
+                var interval = setInterval(function () {
+                    var userInputs = getAllInputs();
+                    if (inputOK(userInputs)) {
+                        el.get(bid).textContent = bid;
+                        el.get(bid).addEventListener("click", functionToSubmit);
+                    } else {
+                        el.get(bid).textContent = "Can't submit, there is bad input.";
+                        el.get(bid).removeEventListener("click", functionToSubmit);
+                    }
+                }, 500);
+            }
+
+            function inputOK(input) {
+                var cleanCopy1 = str.replSym(input, ".", "tempSplit1");
+                cleanCopy1 = str.replSym(cleanCopy1, ",", "tempSplit2");
+                var cleanCopy2 = str.noSym(cleanCopy1);
+                return cleanCopy2.length === cleanCopy1.length;
+            }
+
+            function getAllInputs() {
+                var whereVolumeRowsEnd = 1 + exercise.howManyLogVolumesToCalculate - 1;
+                var logAgonist = getInputsColumn(1, 1, 1 + exercise.howManyLogVolumesToCalculate - 1);
+
+                var logEC50 = getInputsRow(whereVolumeRowsEnd + 1, 2, 5);
+                var EC50 = getInputsRow(whereVolumeRowsEnd + 2, 2, 5);
+                var MolarEC50 = getInputsRow(whereVolumeRowsEnd + 3, 3, 5);
+
+                var doseShiftRatio = getInputsRow(whereVolumeRowsEnd + 4, 3, 5);
+                var DR1 = getInputsRow(whereVolumeRowsEnd + 5, 3, 5);
+                var logDR1 = getInputsRow(whereVolumeRowsEnd + 6, 3, 5);
+
+                var molarAntagonist = getInputsRow(whereVolumeRowsEnd + 7, 3, 5);
+                var logMolar = getInputsRow(whereVolumeRowsEnd + 8, 3, 5);
+                var negativeLogMolar = getInputsRow(whereVolumeRowsEnd + 9, 3, 5);
+
+                var pA2 = el.from(2 + "-" + (whereVolumeRowsEnd + 10));
+
+                var all = [logAgonist, logEC50, EC50, MolarEC50, doseShiftRatio, DR1, logDR1, molarAntagonist, logMolar, negativeLogMolar, pA2];
+                return all.join(userInputsSplitter);
+            }
+
+            function getInputsColumn(column, startRow, endRow) {
+                var inputs = [];
+                for (var i = startRow; i <= endRow; i++) {
+                    inputs.push(str.replSym(el.from(column + "-" + i), ",", ""));
+                }
+                return inputs.join(",");
+            }
+
+            function getInputsRow(row, startRow, endRow) {
+                var inputs = [];
+                for (var i = startRow; i <= endRow; i++) {
+                    inputs.push(str.replSym(el.from(i + "-" + row), ",", ""));
+                }
+                return inputs.join(",");
+            }
+
+            function manageSettingsMenu() {
+                var menu = "menu";
+                if (!el.is(menu)) {
+                    disableDrawing();
+                    createMenu(menu, mc);
+                    var contrastChange = false;
+                    createButton("Contrast", menu, color.blue, function () {
+                        (contrastChange) ? contrastChange = false : contrastChange = true;
+                        (contrastChange) ? theme("white") : theme("rgba(250,250,250,0.5)");
+                    });
+                    createButton("Help", menu, color2.green, function () {
+                        check(helpMessage);
+                    });
+                    toCorner(menu);
+                } else {
+                    el.rem(menu);
+                }
+            }
+
+            function theme(color) {
+                var elements = ["header", "inputsContainer", "graphContainer"];
+                for (var i = 0; i < elements.length; i++) {
+                    st(elements[i], "backgroundColor", color);
+                }
+            }
+
+            function manageDrawingMenu() {
+                disableDrawing();
+                var id = "drawMenu";
+                if (!el.is(id)) {
+                    createContainer(id, mc, "white");
+                    createButton("ChangeColor", id, userColor, function () {
+                        manageChangingColors();
+                    });
+                    createButton("Draw Points", id, userColor, function () {
+                        drawPoints();
+                        el.rem(id);
+                    });
+                    createButton("Draw Lines", id, userColor, function () {
+                        drawLines();
+                        el.rem(id);
+                    });
+                    createButton("Draw Curves", id, userColor, function () {
+                        manageDrawingSplines();
+                    });
+                    createButton("Delete Last Point", id, color2.red, function () {
+                        deleteLastPoint();
+                    });
+                    createButton("Delete Last Line", id, color2.red, function () {
+                        deleteLastLine();
+                    });
+                    createButton("Delete Last Curve", id, color2.red, function () {
+                        deleteLastCurve();
+                    });
+                    el.closeable(id);
+                    toCorner(id);
+                } else {
+                    el.rem(id);
+                }
+            }
+
+            function manageChangingColors() {
+                var id1 = "drawMenu";
+                var id2 = "colorMenu";
+                if (!el.is(id2)) {
+                    createContainer(id2, mc, "white");
+                    createButton("Red", id2, color.red, function () {
+                        userColor = color.red;
+                        getGraph().setDrawingColor(color.red);
+                        close();
+                    });
+                    createButton("Blue", id2, color.blue, function () {
+                        userColor = color.blue;
+                        getGraph().setDrawingColor(userColor);
+                        close();
+                    });
+                    createButton("Green", id2, color.green, function () {
+                        userColor = color.green;
+                        getGraph().setDrawingColor(userColor);
+                        close();
+                    });
+                    createButton("Yellow", id2, color.yellow, function () {
+                        userColor = color.yellow;
+                        getGraph().setDrawingColor(userColor);
+                        close();
+                    });
+                    function close() {
+                        el.rem(id1);
+                        el.rem(id2);
+                    }
+                    toCorner(id2);
+                } else {
+                    el.rem(id2);
+                }
+            }
+
+            function manageDrawingSplines() {
+                getGraph().getGraphSettings().graphInfo = "";
+                var id = "drawMenu";
+                var id2 = "splineMenu";
+                if (!el.is(id2)) {
+                    createContainer(id2, mc, "white");
+                    createText("How many points to connect?", id2);
+                    var data = [4, 5, 6, 7, 8, 9, 10], select = "splineSelection";
+                    el.sel(select, id2, 3, data);
+                    createButton("Start", id2, color.blue, function () {
+                        drawSplines(el.from(select));
+                        el.rem(id2);
+                    });
+                    toCorner(id2);
+                } else {
+                    el.rem(id2);
+                }
+                el.rem(id);
+            }
+
+            function deleteLastPoint() {
+                getGraph().deleteLastPoint();
+            }
+            function deleteLastLine() {
+                getGraph().deleteLastLine();
+            }
+            function deleteLastCurve() {
+                getGraph().deleteLastSpline();
+            }
+
+            function drawSplines(n) {
+                getGraph().drawSplines(n);
+            }
+            function drawPoints() {
+                getGraph().drawPoints();
+            }
+            function drawLines() {
+                getGraph().drawLines();
+            }
+
+            function disableDrawing() {
+                getGraph().stopDrawing();
+            }
+
+            function setupGraph() {
+                var scrSpace = getScreenSpace();
+                createContainer(gc, "mainContainer", graphContainerBackgroundColor);
+                st(gc, "position", "absolute");
+                st(gc, "top", scrSpace.top + "px");
+                st(gc, "left", scrSpace.left + "px");
+
+                var w = scrSpace.w - scrSpace.marginBorder * 2;
+                var h = scrSpace.h - scrSpace.marginBorder * 2;
+
+                var canvas = "";
+                if (w < 800) {
+                    w = 800;
+                    h = 600;
+                    error("Screen is too small, graph is set to default 800x600");
+                }
+                if (w > h) {
+                    canvas = createGraphCanvas(canvasId, gc, w, h);
+                } else {
+                    canvas = createGraphCanvas(canvasId, gc, h, w);
+                }
+
+                startingGraphOneSettings.canvas = canvas;
+                graphOne = new ugraph(startingGraphOneSettings);
+                graphOneLiveSettings = graphOne.getGraphSettings();
+                currentGraph = graphOne;
+                plotOneDataUrl = el.get(canvasId).toDataURL("image/png");
+                plotTwoDataUrl = el.get(canvasId).toDataURL("image/png");
+                changePlot();
+                changePlot();
+            }
+
+            function changePlot() {
+                (graphOneLiveSettings.pause) ? enableGraphOne() : enableGraphTwo();
+            }
+
+            var graphTwoCreated = false;
+            function enableGraphTwo() {
+                disableDrawing();
+                plotOneDataUrl = el.get(canvasId).toDataURL("image/png");
+                if (!graphTwoCreated) {
+                    var canvas = el.get(canvasId);
+                    startingGraphTwoSettings.canvas = canvas;
+                    graphTwo = new ugraph(startingGraphTwoSettings);
+                    graphTwoLiveSettings = graphTwo.getGraphSettings();
+                    graphTwoCreated = true;
+                }
+                graphOneLiveSettings.pause = true;
+                graphTwoLiveSettings.pause = false;
+                graphTwoLiveSettings.infoNearMouse = "";
+                currentGraph = graphTwo;
+            }
+
+            function enableGraphOne() {
+                savedGraphTwo = true;
+                disableDrawing();
+                plotTwoDataUrl = el.get(canvasId).toDataURL("image/png");
+                graphOneLiveSettings.pause = false;
+                graphOneLiveSettings.infoNearMouse = "";
+                graphTwoLiveSettings.pause = true;
+                currentGraph = graphOne;
+            }
+
+            function getGraph() {
+                return currentGraph;
+            }
+
+            function getCustomDisplayValue(val, rowId, columnId) {
+                if (isNumber(val)) {
+                    if (val === -1) {
+                        //(x,y) style of id and table coordinates
+                        return displayTableUserInput(defaultUserNoValue, columnId, rowId);
+                    } else {
+                        if (val === null) {
+                            return displayTableEmpty();
+                        }
+                        return displayTableOutput(val);
+                    }
+                } else {
+                    return displayTableText(val);
+                }
+            }
+
+            function displayTableText(val) {
+                return "<span style=''>" + val + "</span>";
+            }
+
+            function displayTableUserInput(val, rowId, columnId) {
+                var id = rowId + "-" + columnId;
+                return "<textarea id='" + id + "' type='text'  style='background-color:" + color2.green + ";' value='" + val + "'>" + val + "</textarea>";
+            }
+
+            function displayTableEmpty() {
+                return  "<div style='background-color:" + color2.yellow + ";'>" + "" + "</div>";
+            }
+
+            function displayTableOutput(val) {
+                return  "<textarea type='text'  style='background-color:" + color2.blue + ";' value='" + val + "'>" + val + "</textarea>";
+            }
+
+            function isNumber(n) {
+                return !isNaN(n);
+            }
+
+            function toSpecialRow(start, text, width, clsIn) {
+                var cls = "";
+                if (clsIn) {
+                    cls = clsIn;
+                }
+                return "<tr><td  colspan='" + start + "'></td><td class='" + cls + "' colspan='" + width + "'>" + text + "</td></tr>";
+            }
+
+            function toHTMLRow(rowArr, rowId) {
+                var row = "";
+                for (var i = 0; i < rowArr.length; i++) {
+                    var val = rowArr[i];
+                    if (val === null) {
+                        row += columnHTML(getCustomDisplayValue(val, rowId, i));
+                    } else {
+                        row += columnHTML(getCustomDisplayValue(val, rowId, i), true);
+                    }
+
+                }
+                return  rowHTML(row);
+            }
+
+            function columnHTML(s, nice) {
+                if (nice) {
+                    return "<td class='nicetd'>" + s + "</td>";
+                }
+                return "<td style='background-color:" + "rgba(250,250,250,0.5)" + ";'><center>" + s + "</center></td>";
+            }
+
+            function rowHTML(s) {
+                return "<tr>" + s + "</tr>";
+            }
+
+            function getRow(matrix, whichRow) {
+                //  isArrayH(matrix[0])
+                var row = isArrayH(matrix[0]); //if matrix is vector then array is the row
+                if (row.length > 1) {
+                    row = matrix[whichRow];
+                }
+                return row;
+            }
+
+            function getColumn(matrix, whichColumn) {
+                var column = [];
+                for (var i = 0; i < matrix.length; i++) {
+                    column.push(matrix[i][whichColumn]);
+                }
+                return column;
+            }
+
+            function createGraphCanvas(id, where, w, h) {
+                var layer = document.createElement("canvas");
+                layer.id = id;
+                layer.width = w;
+                layer.height = h;
+                document.getElementById(where).appendChild(layer);
+                return layer;
+            }
+
+            function copyObject(obj) {
+                var copy = {};
+                for (var attr in obj) {
+                    if (obj.hasOwnProperty(attr))
+                        copy[attr] = clone(obj[attr]);
+                }
+                return copy;
+            }
+        </script>
+    </body>
+</html>

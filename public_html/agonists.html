@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<!--/**
+* The MIT License (MIT) Copyright (c)
+* 
+* <2016><Gintaras Koncevicius>(@author Ubaby)
+* 
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+* 
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+* 
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+* SOFTWARE.
+*/-->
+<html lang='en'>
+    <head>
+        <title>Agonist Exercise Page</title>
+        <meta property='og:title' content="Cell Receptor and Drug Simulation"/>
+        <meta property='og:site_name' content='roflit.com'/>
+        <meta property='og:type' content='website'/>
+        <meta charset='UTF-8'>
+        <meta name='author' content='Ubaby'>
+        <link rel='shortcut icon' href='favicon.ico' type='image/x-icon'/>
+        <link id='mainStyle' href='styles.css' rel='stylesheet' type='text/css'/>
+        <style>
+            body{
+                background-image: url("siteImages/bgr1.jpg");
+                background-color: #cccccc;
+                background-size:cover;
+            }
+        </style>
+    </head>
+    <body>
+        <script src='javascript/agonist-exercise-data.js' type='text/javascript'></script>
+        <script src='javascript/allFunctions.js' type='text/javascript'></script>
+        <!--<script src='javascript/helpfulFunctions.js' type='text/javascript'></script>-->
+        <script>
+            //GLOBAL variables from custom library at ufunctions.js
+            var color = logo(), color2 = logo2(), cv = H.cnv, canvasObjects = [], resp = "", cvobj,
+                    ran = H.ran, check = H.check.nearMouse,
+                    el = H.el, st = el.st, str = H.str, cls = el.cls,
+                    num = H.num, o = H.obj, arr = H.arr,
+                    scr = getScreen(), movableElement = "",
+                    fullRadian = Math.PI * 2, canMove = false, movableElement = "";
+            function error(e) {
+                check(e);
+                var id = "checkNearMouse";
+                st(id, "backgroundColor", color.red);
+            }
+
+            //globals to split submission strings
+            var imageSplitIndicator = "thisStringHasImage";
+            var queryColumnSplitter = "stringToSplitQuery";
+            var differentQuestionsSplitter = "stringToSplitQuestions";
+            var questionCompoundSplitter = "stringToSplitStudentData";
+
+            //globals of commonly used variables (following Java style or private String blablabla, so that required  methods could access it)
+            var plot, gridPiece = {x: "", y: "", w: "", h: "", xValue: "", yValue: "", size: "", color: ""};
+            var mc = "mainContainer", ct = "centeredInput";
+            var userColor = color.red;
+            var userCompound = "Graph";
+
+            //helper variables, 
+            //screenspace needed to simulate relative elements based on percentage, but avoid empty gaps
+            var screenSpace = {h: "", w: "", marginSides: "", borderSides: "", marginBorder: "", top: "", left: "", temporarySwap: ""};
+            var helpMessage =
+                    "Take time to click, dont rush." + "</br>" +
+                    "Settings menu allow you to modify graph." + "</br>" +
+                    "Drawing menu allow you to change color and draw." + "</br>" +
+                    "Drawing curves or splines needs you to click on multiple points before it is drawn." + "</br>" +
+                    "If you press M and container, you can move them around." + "</br>" +
+                    "Click once on graph to place or remove point." + "</br>" +
+                    "Click 3 times on graph or its points to draw curve." + "</br>" +
+                    "Click 5-10 times on graph or its points to draw spline." + "</br>" +
+                    "Click z to remove last curve, line or spline when in their own drawing mode.";
+
+            //USER DATA
+            //var userResults = {id: "", concentration: [], logConcentration: [], efficacy: "", potency: "", pd: "", graph: "", question: ""};
+            var studentResults = {pw: "", student: "", compoundResults: [], graph: "", questions: []};
+            function CompoundResult(title, concentration, log, efficacy, potency, pd) {
+                this.title = title;
+                this.concentration = arr.copy(concentration);
+                this.log = arr.copy(log);
+                this.efficacy = efficacy;
+                this.potency = potency;
+                this.pd = pd;
+            }
+            var defaultUserValues = 0;
+            var drawingStatus = [false, false, false, false];
+//points, curves, lines, free
+            var displayPreciseNumbers = false;
+            var curvePointLimit = 10;
+            var userCanDraw = false;
+            var transparentElements = ["centeredInput", "header", "testForm", "graph"];
+            var drawingInterval = 0;
+            var graphWidth = 0;
+            var graphHeight = 0;
+
+
+            //POSTS
+            var studentLogin_POST = "studentLogin";
+            var studentSubmitAgonist_POST = "studentSubmitAgonist";
+
+            //RESPONSES
+            var correctPasswordResponse_RESPONSE = "correctPassword";
+            var submittedResponse_RESPONSE = "submitted";
+            var alreadySubmittedResponse_RESPONSE = "alreadySubmitted";
+            var badSubmissionResponse_RESPONSE = "badSubmission";
+
+            var crossImage = new Image();
+            crossImage.src = "siteImages/x.png";
+
+            //MAIN
+            listenMovingElements();
+            listenMouse();
+            listenLetterKeys();
+
+//DEBUG
+            enableLogin();
+//            studentResults.student = "ubaby";//ran.int(999, 999999) + "testUser";
+//            studentResults.pw = 111;
+//            main();
+
+            function enableLogin() {
+                var id = "login";
+                createContainer(id);
+                createInput("user", id, "Enter Student Id/ Ids", "");
+                createInput("password", id, "Enter Excercise Password", "");
+                var e = el.get("inputuser");
+                e.setAttribute("placeholder", "u1234567,u1234567");
+                createButton("Start", id, color.green, function () {
+                    var user = clean(el.from("inputuser"));
+                    if (user.length > 2) {
+                        studentResults.student = user;
+                        var pw = el.from("inputpassword");
+                        pw = clean(pw);
+                        studentResults.pw = pw;
+                        submVal(studentLogin_POST, pw);
+                    } else {
+                        error("Username is too short.");
+                        el.rem(id);
+                         enableLogin();
+                    }
+                });
+                toCorner(id);
+            }
+
+            var lateReply = true;
+            var lateChecker = "";
+            function manageLateReply() {
+                if (lateReply) {
+                    lateChecker = setTimeout(function () {
+                        if (!resp) {
+                            error("3 seconds passed, slow internet or wrong password.");
+                        }
+                    }, 3000);
+                }
+                lateReply = false;
+            }
+
+            function submVal(key, val) {
+                var post = key + "=" + val;
+                var page = "studentDBM.php";
+                var connection = new serverClient(page, post);
+                connection.connect();
+                manageLateReply();
+                var tempInterval = setInterval(function () {
+                    resp = getResponse();
+                    if (resp !== "") {
+                        clearInterval(tempInterval);
+                        clearTimeout(lateChecker);
+                        var responseData = resp.split("Response");
+                        var type = responseData[0];
+                        var data = responseData[1];
+
+                        if (type === correctPasswordResponse_RESPONSE) {
+                            check("Login: " + data);
+                            el.rem("login");
+                            main();
+                        } else if (type === submittedResponse_RESPONSE) {
+                            check("Submit: " + data);
+                        } else if (type === alreadySubmittedResponse_RESPONSE) {
+                            check("Already Submitted: " + data);
+                        } else if (type === badSubmissionResponse_RESPONSE) {
+                            check("Bad Submission: " + data);
+                        }
+                        resp = "";
+                    }
+                }, 500);
+            }
+
+            function main() {
+                initScreenSpace(scr.w, scr.h);
+                createHeader();
+                el.div(mc);
+                var data = loadAllCompounds();
+                var id = "centeredInput";
+                createContainer(id, "mainContainer", "rgba(250,250,250,0.5)");
+                manageInputProperties(data);
+                displayAllCompounds(id);
+                var dataForGraph = createGraphData();
+                decideGraphDimensions(dataForGraph);
+                var disableGraphElements = ["centeredInput", "header", "testForm"];
+                for (var i = 0; i < disableGraphElements.length; i++) {
+                    var id1 = disableGraphElements[i];
+                    el.click(id1, "mouseover", function () {
+                        disableUserDrawing();
+                        graphInfo = "Drawing Disabled.";
+                    });
+                }
+
+                el.click("graph", "mouseover", function () {
+                    //enableUserDrawing();
+                });
+            }
+
+            function loadAllCompounds() {
+                exercise.compounds = [];
+                exercise.compounds.push(compound1);
+                exercise.compounds.push(compound2);
+                exercise.compounds.push(compound3);
+                exercise.compounds.push(compound4);
+                return exercise.compounds[0];
+            }
+
+            function displayAllCompounds(id) {
+                for (var i = 0; i < exercise.compounds.length; i++) {
+                    var compound = exercise.compounds[i];
+                    var title = compound.title;
+                    createText(title, id, "black");
+                    createContainer(title, id, "transparent");
+                    enableUserInputs(i, title, compound);
+                }
+            }
+
+            function decideGraphDimensions(dataForGraph) {
+                var w = scr.w - (screenSpace.left + screenSpace.marginBorder);
+                var h = scr.h - (screenSpace.temporarySwap + screenSpace.marginBorder);
+
+                if (w < 800) {
+                    createTextForm();
+                    enableGraph2(dataForGraph);
+                } else {
+                    enableGraph(dataForGraph);
+                    createTextForm();
+                }
+            }
+
+            function createGraphData() {
+                var x = [], y = [], compound = {title: "Graph",
+                    concentration: 10,
+                    xName: "Log Concentration",
+                    yName: "Response", xValues: "", yValues: ""};
+                var organBathVolume = exercise.organBathVolume;
+                for (var i = 0; i < exercise.compounds.length; i++) {
+                    var c = exercise.compounds[i];
+                    var curX = c.xValues;
+                    var curY = c.yValues;
+                    var stockConcentration = c.concentration;
+                    for (var j = 0; j < curX.length; j++) {
+                        var stockVolume = curX[j];
+                        var correctConcentration = calculateConcentration(organBathVolume, stockVolume, stockConcentration);
+                        var correctLog = calculateLog(correctConcentration);
+                        x.push(round(correctLog, 3));
+                    }
+                    y = y.concat(curY);
+                }
+                compound.xValues = arr.copy(x);
+                compound.yValues = arr.copy(y);
+                return compound;
+            }
+
+            function enableSubmission() {
+                createButton("-", "header", color.red, function () {
+                });
+                var interval = setInterval(function () {
+                    //inputsOK also loads imputs, maybe fix later for easier read
+                    if (inputsOK()) {
+                        if (!el.is("Submit")) {
+                            el.rem("-");
+                            createButton("Submit", "header", color.green, function () {
+                                var result = studentResultsToString();
+                                submVal(studentSubmitAgonist_POST, studentResults.pw + "stringToSplitPasswordData" + result);
+                                clearInterval(interval);
+                                el.rem("Submit");
+                                check("Submitted!");
+                                st("checkNearMouse", "maxWidth", scr.w + "px");
+                                st("checkNearMouse", "top", 0 + "px");
+                                st("checkNearMouse", "left", 0 + "px");
+                            });
+                        }
+                    } else {
+                        createButton("-", "header", color.red, function () {
+                        });
+                        el.rem("Submit");
+                    }
+                }, 500);
+            }
+
+            function inputsOK() {
+                if (mathInputsOK() && graphInputsOK() && testInputsOK()) {
+                    return true;
+                }
+                return false;
+            }
+
+            function studentResultsToString() {
+                //studentResults = {student: "", compoundResults: [], graph: "", questions: []};
+                var typeOfSubmission = "agonists";
+                var student = studentResults.student;
+                var graph = canvasToString(canvasObjects[0]);
+                var questions = studentResults.questions.join(differentQuestionsSplitter);
+                var compoundData = compoundsToString();
+                var all = [questions, compoundData];
+                all = all.join(questionCompoundSplitter) + imageSplitIndicator + graph;
+                return student + queryColumnSplitter + typeOfSubmission + queryColumnSplitter + all;
+            }
+
+            function testStudentResultString(all) {
+                var item = all.split("stringToSplitStudentData");
+                var stud = item[0];
+                var qs = item[1].split("stringToSplitQuestions");
+                var cpds = item[2].split("stringToSplitCompounds");
+                for (var i = 0; i < cpds.length; i++) {
+                    var cur = cpds[i].split(";");
+                    var title = cur[0];
+                    var conc = cur[1].split(",");
+                    var log = cur[2].split(",");
+                    var eff = cur[3];
+                    var pot = cur[4];
+                    var pd = cur[5];
+                    check(title);
+                    check(conc.join(")("));
+                    check(log.join(")("));
+                }
+                var img = item[3];
+                createLayer("qq", mc, "transparent", 0, 0, 100, scr.w, scr.h);
+                stringImageToCanvas(img, canvasObjects[1]);
+            }
+
+            function compoundsToString() {
+                //CompoundResult(title, concentration, log, efficacy, potency, pd)
+                var cp = studentResults.compoundResults;
+                var all = [];
+                for (var i = 0; i < cp.length; i++) {
+                    var cur = cp[i];
+                    var data = cur.title + ";" + cur.concentration.join(",") + ";" + cur.log.join(",") + ";" + cur.efficacy + ";" + cur.potency + ";" + cur.pd;
+                    all.push(data);
+                }
+                return all.join("stringToSplitCompounds");
+            }
+
+            function testCanvasToImage() {
+                var img = canvasToString(canvasObjects[0]);
+                createLayer("qq", mc, "transparent", 0, 0, 100, scr.w, scr.h);
+                stringImageToCanvas(img, canvasObjects[1]);
+            }
+
+            function createLayer(id, where, color, x, y, z, w, h) {
+                var container = "container" + id;
+                createContainer(container, where, color);
+                st(container, "width", w + "px");
+                st(container, "height", h + "px");
+                cv.layer(id);
+                purifyElement(id);
+                el.add(id, container);
+                cv.size(id, w, h);
+                cv.pos(id, x, y, z);
+                canvasObjects = cv.all();
+            }
+
+            function mathInputsOK() {
+                studentResults.compoundResults = [];
+                var userData;
+                var fail = 0;
+                for (var i = 0; i < exercise.compounds.length; i++) {
+                    var compound = i;
+                    userData = [];
+                    var curCompound = exercise.compounds[i];
+                    for (var j = 2; j < 4; j++) {
+                        var column = compound + "" + j;
+                        var len = curCompound.xValues.length;
+                        var columnData = new Array(len);
+                        columnData = arr.fill(columnData, 0);
+                        for (var k = 0; k < len; k++) {
+                            var value = column + k;
+                            var input = el.from(value);
+                            if (!isGoodNumber(input)) {
+                                fail++;
+                            } else {
+                                columnData[k] = input;
+                            }
+                        }
+                        userData.push(columnData);
+                    }
+
+                    var eff = "Efficacy" + i + "" + 4, pot = "Potency" + i + "" + 4, pdt = "pdtwo" + i + "" + 4;
+                    var efficacy = el.from(eff), potency = el.from(pot), pdtwo = el.from(pdt);
+                    if (isGoodNumber(efficacy) && isGoodNumber(potency) && isGoodNumber(pdtwo)) {
+                        studentResults.compoundResults.push(new CompoundResult(curCompound.title, userData[0], userData[1], efficacy, potency, pdtwo));
+                    } else {
+                        fail++;
+                    }
+                }
+                if (fail > 0) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+
+            function graphInputsOK() {
+                return true;
+            }
+
+            function testInputsOK() {
+                studentResults.questions = [];
+                for (var i = 0; i < exercise.questions.length; i++) {
+                    var d = el.from("Question" + (i + 1));
+                    if (!isClean(d)) {
+                        return false;
+                    } else {
+                        studentResults.questions.push(d);
+                    }
+                }
+                var s = el.get("select1");
+                var text = s.options[s.selectedIndex].text;
+                var answer = exercise.multiChoice.choices[parseFloat(text) - 1];
+                studentResults.questions.push(hashString(answer));
+                return true;
+            }
+
+            function createHeader() {
+                var id = "header", story = "story";
+                el.div(id);
+                cls(id, "container border shadow");
+                st(id, "backgroundColor", "rgba(250,250,250,0.5)");
+                createText("Student: " + studentResults.student, "header");
+                createContainer(story, id, "transparent");
+                st(story, "maxWidth", scr.w / 2 + "px");
+                createText(exercise.story, story, "rgb(0,0,0)", scr.w / 2, 5);
+
+                createButton("Settings Menu", id, color2.green, function () {
+                    manageSettingsMenu();
+                });
+
+                createButton("Help", id, color2.green, function () {
+                    manageHelpMenu();
+//                    check(helpMessage);
+                });
+
+                createButton("Drawing Menu", id, color2.green, function () {
+                    manageDrawingMenu();
+                });
+
+                enableSubmission();
+                var h = el.get(id).offsetHeight - 2;
+                st(id, "width", scr.w - screenSpace.marginBorder + "px");
+                st(id, "height", h + "px");
+                updateScreenSpace(0, h);
+            }
+
+            function manageDrawingMenu() {
+                var id = "drawMenu";
+                if (!el.is(id)) {
+                    createContainer(id, mc, "white");
+                    el.click(id, "mouseover", function () {
+                        disableUserDrawing();
+                    });
+
+                    createButton("ChangeColor", id, userColor, function () {
+                        manageChangingColor();
+                    });
+                    createButton("Points", id, userColor, function () {
+                        graphInfo = "";
+                        enableOneOnly(0, drawingStatus);
+                        el.rem(id);
+                    });
+//                    createButton("Curves", id, userColor, function () {
+//                        graphInfo = "";
+//                        enableOneOnly(1, drawingStatus);
+//                        el.rem(id);
+//                    });
+                    createButton("Lines", id, userColor, function () {
+                        graphInfo = "";
+                        enableOneOnly(2, drawingStatus);
+                        el.rem(id);
+                    });
+                    createButton("Curves", id, userColor, function () {
+                        graphInfo = "";
+                        var id2 = "splineMenu";
+                        if (!el.is(id2)) {
+                            createContainer(id2, mc, "white");
+                            createText("How many points to connect?", id2);
+                            var data = [4, 5, 6, 7, 8, 9, 10], select = "splineSelection";
+                            el.sel(select, id2, 3, data);
+
+                            createButton("Start", id2, color.blue, function () {
+                                curvePointLimit = parseInt(el.from(select));
+                                enableOneOnly(3, drawingStatus);
+                                el.rem(id2);
+                            });
+
+                            toCorner(id2);
+                        } else {
+                            el.rem(id2);
+                        }
+                        el.rem(id);
+                    });
+                    el.closeable(id);
+                    toCorner(id);
+                } else {
+                    el.rem(id);
+                }
+
+                function enableOneOnly(j, arr) {
+                    setTimeout(function () {
+                        for (var i = 0; i < arr.length; i++) {
+                            arr[i] = false;
+                        }
+                        arr[j] = true;
+                        userCanDraw = true;
+                    }, 1000);
+                }
+            }
+
+            function manageChangingColor() {
+                var ch = "ChangeColor";
+                var id2 = "colorMenu";
+                if (!el.is(id2)) {
+                    createContainer(id2, mc, "white");
+                    el.click(id2, "mouseover", function () {
+                        disableUserDrawing();
+                    });
+                    createText("Each compound has its own color, please don't mix.", id2, "black");
+                    createButton("Compound1", id2, color.red, function () {
+                        userColor = color.red;
+                        userCompound = compound1.title;
+                        st(ch, "backgroundColor", userColor);
+                        el.rem("drawMenu");
+                        el.rem(id2);
+                    });
+                    createButton("Compound2", id2, color.blue, function () {
+                        userColor = color.blue;
+                        userCompound = compound2.title;
+                        st(ch, "backgroundColor", userColor);
+                        el.rem("drawMenu");
+                        el.rem(id2);
+                    });
+                    createButton("Compound3", id2, color.green, function () {
+                        userColor = color.green;
+                        userCompound = compound3.title;
+                        st(ch, "backgroundColor", userColor);
+                        el.rem("drawMenu");
+                        el.rem(id2);
+                    });
+                    createButton("Compound4", id2, color.yellow, function () {
+                        userColor = color.yellow;
+                        userCompound = compound4.title;
+                        st(ch, "backgroundColor", userColor);
+                        el.rem("drawMenu");
+                        el.rem(id2);
+                    });
+                    el.closeable(id2);
+                    toCorner(id2);
+                } else {
+                    el.rem(id2);
+                }
+            }
+
+            function manageHelpMenu() {
+                var menu = "helpMenu";
+                if (!el.is(menu)) {
+                    createMenu(menu, mc);
+                    el.inn(menu, helpMessage);
+                    toCorner(menu);
+                } else {
+                    el.rem(menu);
+                }
+            }
+
+            function manageSettingsMenu() {
+                var menu = "menu";
+                if (!el.is(menu)) {
+                    createMenu(menu, mc);
+                    el.click(menu, "mouseover", function () {
+                        disableUserDrawing();
+                    });
+                    var btid = "Precise Axis Numbers";
+                    createButton(btid, menu, color.green, function () {
+                        (displayPreciseNumbers) ? displayPreciseNumbers = false : displayPreciseNumbers = true;
+                        (displayPreciseNumbers) ? el.get(btid).textContent = "Rounded Axis Numbers" : el.get(btid).textContent = "Precise Axis Numbers";
+                    });
+                    var contrastChange = false;
+                    createButton("Contrast", menu, color.blue, function () {
+                        (contrastChange) ? contrastChange = false : contrastChange = true;
+                        (contrastChange) ? theme("white") : theme("rgba(250,250,250,0.5)");
+                    });
+
+//                    var size = 0;
+//                    createButton("Increase Graph Size", menu, color.blue, function () {
+//                        size += 100;
+//                        resetGraphSize(size);
+//                        el.rem(menu);
+//                    });
+//                    createButton("Reduce Graph Size", menu, color.blue, function () {
+//                        size -= 100;
+//                        resetGraphSize(size);
+//                        el.rem(menu);
+//                    });
+                    toCorner(menu);
+                } else {
+                    el.rem(menu);
+                }
+            }
+
+            function enableUserInputs(id, compoundContainer, data) {
+                var concentration = new Array(data.yValues.length);
+                var logConcentration = new Array(data.yValues.length);
+                fillDefaultUserValues(data, concentration, logConcentration);
+                //containerId,where,title,data,color
+                displayColumn(id + "0", compoundContainer, inTitles.response, data.yValues, color2.blue);//color.blue);
+                displayColumn(id + "1", compoundContainer, inTitles.volume, data.xValues, color2.blue);// color.blue);
+                displayColumn(id + "2", compoundContainer, inTitles.organBath, concentration, color2.yellow);// color.yellow);
+                displayColumn(id + "3", compoundContainer, inTitles.log, logConcentration, color2.yellow);// color.yellow);
+                displayExtraInputs(id + "4", compoundContainer);
+            }
+
+            function fillDefaultUserValues(data, concentration, logConcentration) {
+                var stockConcentration = data.concentration;
+                for (var i = 0; i < concentration.length; i++) {
+                    var stockVolume = data.xValues[i];
+                    var correctConcentration = calculateConcentration(exercise.organBathVolume, stockVolume, stockConcentration);
+                    var correctLog = calculateLog(correctConcentration);
+                    if (defaultUserValues === -1) {
+                        concentration[i] = round(correctConcentration, 3);
+                        logConcentration[i] = round(correctLog, 3);
+                    } else {
+                        concentration[i] = defaultUserValues;
+                        logConcentration[i] = defaultUserValues;
+                    }
+                }
+            }
+
+            function manageInputProperties(data) {
+                var id = "centeredInput";
+                canBeMoved(id);
+                var top = screenSpace.top;
+                var w = 5 * (100 + 25);
+                var h = data.yValues.length * (15 + 15) + 150;
+                h += h / 3;
+                screenSpace.temporarySwap = top;
+                updateScreenSpace(w, h);
+                st(id, "width", w + "px");
+                st(id, "height", h + "px");
+                st(id, "top", top + "px");
+                st(id, "left", 0 + "px");
+            }
+
+            function displayExtraInputs(id, where) {
+                createContainer(id, where, color2.green);
+                var h = el.get("01").offsetHeight - 2;
+                st(id, "height", h + "px");
+                st(id, "maxWidth", 100 + "px");
+
+                createText("Efficacy", id, "black", 100, 5, 30);
+                input(inTitles.efficacy + id, id, 15);
+                el.to(inTitles.efficacy + id, defaultUserValues);
+                createText("Potency", id, "black", 100, 5, 30);
+                input(inTitles.potency + id, id, 15);
+                el.to(inTitles.potency + id, defaultUserValues);
+                createText("pD2", id, "black", 100, 5, 30);
+                input(inTitles.pd + id, id, 15);
+                el.to(inTitles.pd + id, defaultUserValues);
+            }
+
+            function resetGraphSize(size) {
+                var id = "graphContainer";
+                var w = el.get(id).offsetWidth;
+                var h = el.get(id).offsetHeight;
+
+                if (el.is(id)) {
+                    clearInterval(drawingInterval);
+                    canvasObjects = [];
+                    cvobj = [];
+                    el.rem(id);
+                    resetLines();
+                    resetCurves();
+                    resetSplines();
+                }
+
+                var data = createGraphData();
+                var mainGraph = "graph";
+                createContainer(id, "mainContainer", "rgba(250,250,250,0.5)");
+                canBeMoved(id);
+                w += size;
+                h += size * 0.628;
+
+                st(id, "width", w + "px");
+                st(id, "height", h + "px");
+                st(id, "top", 10 + "px");
+                st(id, "left", 10 + "px");
+
+                createDrawableArea(mainGraph, id, 0, 0, w, h);
+                cvobj = canvasObjects[0];
+                setUpGraphData(data, w, h);
+                allowDrawing();
+
+                canMove = true, movableElement = id;
+            }
+
+            function enableGraph(data) {
+                var id = "graphContainer", mainGraph = "graph";
+                createContainer(id, "mainContainer", "rgba(250,250,250,0.5)");
+                canBeMoved(id);
+
+                var w = scr.w - (screenSpace.left + screenSpace.marginBorder);
+                var h = scr.h - (screenSpace.temporarySwap + screenSpace.marginBorder);
+                var top = screenSpace.temporarySwap;
+                var left = screenSpace.left;
+                graphWidth = w;
+                graphHeight = h;
+
+                st(id, "width", w + "px");
+                st(id, "height", h + "px");
+                st(id, "top", top + "px");
+                st(id, "left", left + "px");
+
+                createDrawableArea(mainGraph, id, 0, 0, w, h);
+                cvobj = canvasObjects[0];
+                setUpGraphData(data, w, h);
+                allowDrawing();
+            }
+
+            function enableGraph2(data) {
+                var id = "graphContainer", mainGraph = "graph";
+                createContainer(id, "mainContainer", "rgba(250,250,250,0.5)");
+                canBeMoved(id);
+
+                var w = 800;
+                var h = 600;
+                var top = scr.h + screenSpace.marginBorder;
+                var left = 0;
+                graphWidth = w;
+                graphHeight = h;
+
+                st(id, "width", w + "px");
+                st(id, "height", h + "px");
+                st(id, "top", top + "px");
+                st(id, "left", left + "px");
+
+                createDrawableArea(mainGraph, id, 0, 0, w, h);
+                cvobj = canvasObjects[0];
+                setUpGraphData(data, w, h);
+                //allow user input             
+                allowDrawing();
+            }
+
+            function setUpGraphData(data, w, h) {
+                //enable numbers only after first compound is solved
+                //min max is from all values
+                plot = new GraphObject();
+                plot.precision = 7;
+                //why to pass the plot to itself?, 
+                //because this.this is confusing and I need to make shorter functions without using globals
+                plot.setLocation(plot, 100, 100);
+                //                plot.setSize(plot, 100, 100);
+                //  
+                plot.setSizeByPixels(plot, w, h);
+//        if (w > h) {
+//                    plot.setSizeByPixels(plot, w, h);
+//                } else {
+//                    plot.setSizeByPixels(plot, h, w);
+//                   // error("Window is too small for the graph. Please resize browser window making if wider or narrower (portrait), so that the graph could be fitted or pushed to the bottom.");
+//                }
+                plot.offset.x = findOffset(data.xValues, plot.size.w);
+                plot.offset.y = findOffset(data.yValues, plot.size.h);
+                plot.setMatrix(plot);
+                plot.setDataToPlot(plot, data);
+                //                plot.setDataToMatrix(plot);
+                plot.setGraphProperties(plot);
+                plot.setGraphNumberRepresentations(plot);
+                plot.setNumbersToGraph(plot);
+            }
+
+            function findOffset(array, pieces) {
+                var sorted = arr.sort.asc(array);
+                var min = sorted[0];
+                var max = sorted[sorted.length - 1];
+                var widthInPieces = pieces;
+
+                var tenPct = num.pct(max, 50);
+                var newMax = max + tenPct;
+
+                var onePieceWidth = newMax / widthInPieces;
+
+                var offsetInPieces = Math.round(min / onePieceWidth, 1);
+                return offsetInPieces;
+            }
+            function allowDrawing() {
+                drawingInterval = setInterval(function () {
+                    draw();
+                }, mouse.precision);
+            }
+
+            function draw() {
+                var m = getMouse();
+                clearCanvas();
+                pointDrawing(m);
+                var x = plot.location.x, y = plot.location.y, w = plot.size.w, h = plot.size.h, p = plot.precision;
+                var matrix = plot.matrix, title = userCompound, xTitle = plot.xData.title, yTitle = plot.yData.title;
+                drawGridObjects(matrix);
+                drawGrid(x, y, w, h, p);
+                drawCoordinates(x, y, w, h, title, xTitle, yTitle);
+                if (displayPreciseNumbers) {
+                    drawValueNumbers(plot, x, y, w, h, p);
+                } else {
+                    drawValueNumbers3(plot, x, y, w, h, p);
+                }
+                if (userCanDraw) {
+                    drawCroshair();
+                }
+                drawInfoNearMouse(getGraphInfo());
+                curveDrawing(m);
+                lineDrawing(m);
+                deletionDrawing();
+                splineDrawing(m);
+            }
+
+            function drawInfoNearMouse(txt) {
+                var m = getCanvasMouse(cvobj), x = m.x, y = m.y, w = plot.size.w, h = plot.size.h;
+                var p = plot.precision;
+                var lineWidth = (w * p);
+                var lineHeight = (h * p);
+                y += 1;
+                x -= plot.location.x;
+                y = lineHeight + plot.location.y - y;
+
+                var graphMinX = plot.xData.graphMin;
+                var graphMinY = plot.yData.graphMin;
+                var graphMaxX = plot.xData.graphMax;
+                var graphMaxY = plot.yData.graphMax;
+
+                var lineWidth2 = plot.xData.gridSize;
+                var lineHeight2 = plot.yData.gridSize;
+
+                var normalizedX = H.num.norm(x, 0, lineWidth2 - plot.location.x, graphMinX, graphMaxX);
+                normalizedX = round(normalizedX, 1);
+
+                var normalizedY = H.num.norm(y, 0, lineHeight2 - plot.location.y, graphMinY, graphMaxY);
+                normalizedY = round(normalizedY, 1);
+
+                cv.txt(cvobj, m.x + 10, m.y + 15, 13, txt, "black", 0);
+                cv.txt(cvobj, m.x + 10, m.y + 30, 13, "(" + normalizedX + "," + normalizedY + ")", "black", 0);
+            }
+
+            var graphInfo = "";
+            function buildGraphTitle() {
+                var title = " ";
+                title += "(";
+                title += getGraphInfo();
+                title += ")";
+                return title;
+            }
+
+            function getGraphInfo() {
+                return graphInfo;
+            }
+
+            function disableUserDrawing() {
+                userCanDraw = false;
+            }
+            function enableUserDrawing() {
+                userCanDraw = true;
+            }
+
+            function splineDrawing(m) {
+                if (drawingStatus[3] === true && m.clicks === 1) {
+                    m.clicks = 0;
+                    if (userCanDraw) {
+                        manageSpline();
+                    }
+                }
+                drawSplines();
+                drawMarkers();
+            }
+
+            function pointDrawing(m) {
+                if (drawingStatus[0] === true && m.clicks === 1) {
+                    m.clicks = 0;
+                    if (userCanDraw) {
+                        graphInfo = "Drawing Points: ";
+                        modifyGridPiece(plot.matrix, m);
+                    }
+                }
+            }
+
+            function lineDrawing(m) {
+                if (drawingStatus[2] === true && m.clicks === 1) {
+                    m.clicks = 0;
+                    if (userCanDraw) {
+                        manageLine();
+                    }
+                }
+                drawLines();
+            }
+
+            function deletionDrawing() {
+                if (getLetterKey() === "z") {
+                    if (drawingStatus[1]) {
+                        var c = getCurves();
+                        if (c.length) {
+                            c.pop();
+                        }
+                    }
+                    if (drawingStatus[2]) {
+                        var l = getLines();
+                        if (l.length) {
+                            l.pop();
+                        }
+                    }
+                    if (drawingStatus[3]) {
+                        var s = getSplines();
+                        if (s.length) {
+                            s.pop();
+                            markers = [];
+                        }
+                    }
+                    resetLetterKey();
+                }
+            }
+
+            function curveDrawing(m) {
+                if (drawingStatus[1] === true && m.clicks === 1) {
+                    m.clicks = 0;
+                    if (userCanDraw) {
+                        manageCurve();
+                    }
+                }
+                drawCurves();
+            }
+
+            function drawLines() {
+                var l = getLines();
+                if (l) {
+                    for (var i = 0; i < l.length; i++) {
+                        drawLine(l[i]);
+                    }
+                }
+            }
+
+            function drawMarkers() {
+                var m = getMarkers();
+                if (m) {
+                    for (var i = 0; i < m.length; i++) {
+                        drawMarker(m[i], "cross");
+                        //drawMarker(m[i],"circle");
+                    }
+                }
+            }
+
+            function drawSplines() {
+                var s = getSplines();
+                if (s) {
+                    for (var i = 0; i < s.length; i++) {
+                        drawSpline(s[i]);
+                    }
+                }
+            }
+
+            function drawCurves() {
+                var c = getCurves();
+                if (c) {
+                    for (var i = 0; i < c.length; i++) {
+                        drawCurve(c[i]);
+                    }
+                }
+            }
+
+            //utility
+            function getSplines() {
+                return splines;
+            }
+            function getMarkers() {
+                return markers;
+            }
+            function getLines() {
+                return lines;
+            }
+            function getCurves() {
+                return curves;
+            }
+
+//utility
+            function Curve(p1, p2, p3, color) {
+                this.p1 = p1;
+                this.p2 = p2;
+                this.p3 = p3;
+                this.color = color;
+            }
+
+//utility
+            function  Spline(arr, color) {
+                this.arr = arr;
+                this.color = color;
+            }
+
+//utility
+            function  Line(p1, p2, color) {
+                this.p1 = p1;
+                this.p2 = p2;
+                this.color = color;
+            }
+
+//utility
+            function Point(x, y) {
+                this.x = x;
+                this.y = y;
+            }
+
+            function drawLine(l) {
+                var p1 = l.p1, p2 = l.p2;
+                var ct = canvasObjects[0].context;
+                ct.save();
+                ct.beginPath();
+                ct.strokeStyle = l.color;
+                ct.lineWidth = "2";
+                ct.moveTo(p1.x, p1.y);
+                ct.lineTo(p2.x, p2.y);
+                ct.stroke();
+                ct.restore();
+            }
+
+            function drawMarker(p, markerType) {
+                if (markerType === "circle") {
+                    var x = p.x, y = p.y;
+                    cv.cir(cvobj, x, y, 10, 0, 2 * Math.PI, "grey", 1, false, false);
+                }
+                if (markerType === "cross") {
+                    var x = p.x, y = p.y;
+                    rotateImageH(crossImage, cvobj, x, y, Math.PI / 4);
+                }
+            }
+
+            function drawSpline(s) {
+                var points = s.arr;
+                var ct = canvasObjects[0].context;
+                ct.save();
+                ct.beginPath();
+                ct.strokeStyle = s.color;
+                ct.lineWidth = "2";
+
+                var points2 = [];
+                for (i = 0; i < points.length; i++)
+                {
+                    var x = points[i].x;
+                    var y = points[i].y;
+                    points2.push(x);
+                    points2.push(y);
+                }
+                calculateAndSpline(ct, points2);
+
+                ct.stroke();
+                ct.restore();
+            }
+            //http://stackoverflow.com/questions/7054272/how-to-draw-smooth-curve-through-n-points-using-javascript-html5-canvas       
+            function calculateAndSpline(ctx, pts1) {
+                var pts2 = getCurvePoints(pts1);
+                ctx.beginPath();
+                ctx.moveTo(pts2[0], pts2[1]);
+
+                for (i = 2; i < pts2.length - 1; i += 2) {
+                    ctx.lineTo(pts2[i], pts2[i + 1]);
+                }
+            }
+
+            function getCurvePoints(pts) {
+                // use input value if provided, or use a default value   
+                var tension = 0.5;
+                var numOfSegments = 16;//how many lines used to build curve
+
+                var _pts = [], res = [], // clone array
+                        x, y, // our x,y coords
+                        t1x, t2x, t1y, t2y, // tension vectors
+                        c1, c2, c3, c4, // cardinal points
+                        st, t, i;       // steps based on num. of segments
+
+                _pts = pts.slice(0);
+                _pts.unshift(pts[1]);   //copy 1. point and insert at beginning
+                _pts.unshift(pts[0]);
+                _pts.push(pts[pts.length - 2]); //copy last point and append
+                _pts.push(pts[pts.length - 1]);
+
+                // 1. loop goes through point array
+                // 2. loop goes through each segment between the 2 pts + 1e point before and after
+                for (i = 2; i < (_pts.length - 4); i += 2) {
+                    for (t = 0; t <= numOfSegments; t++) {
+                        // calc tension vectors
+                        t1x = (_pts[i + 2] - _pts[i - 2]) * tension;
+                        t2x = (_pts[i + 4] - _pts[i]) * tension;
+                        t1y = (_pts[i + 3] - _pts[i - 1]) * tension;
+                        t2y = (_pts[i + 5] - _pts[i + 1]) * tension;
+
+                        // calc step
+                        st = t / numOfSegments;
+                        // calc cardinals
+                        c1 = 2 * Math.pow(st, 3) - 3 * Math.pow(st, 2) + 1;
+                        c2 = -(2 * Math.pow(st, 3)) + 3 * Math.pow(st, 2);
+                        c3 = Math.pow(st, 3) - 2 * Math.pow(st, 2) + st;
+                        c4 = Math.pow(st, 3) - Math.pow(st, 2);
+
+                        // calc x and y cords with common control vectors
+                        x = c1 * _pts[i] + c2 * _pts[i + 2] + c3 * t1x + c4 * t2x;
+                        y = c1 * _pts[i + 1] + c2 * _pts[i + 3] + c3 * t1y + c4 * t2y;
+
+                        //store points in array
+                        res.push(x);
+                        res.push(y);
+                    }
+                }
+                return res;
+            }
+
+//utility
+            function drawCurve(c) {
+                var p1 = c.p1, p2 = c.p2, p3 = c.p3;
+                var ct = canvasObjects[0].context;
+                ct.save();
+                ct.beginPath();
+                ct.strokeStyle = c.color;
+                ct.lineWidth = "2";
+                ct.moveTo(p1.x, p1.y);
+                ct.bezierCurveTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+                ct.stroke();
+                ct.restore();
+            }
+
+            //needed to count mouse clicks and register coordinates
+            var lineCounter = 1;
+            var lineData = [];
+            var lines = [];
+            function resetLines() {
+                lineCounter = 1;
+                lineData = [];
+                lines = [];
+            }
+            function manageLine() {
+                var m = getCanvasMouse(canvasObjects[0]), x = m.x, y = m.y;
+                lineData.push(new Point(x, y));
+                graphInfo = "Drawing Line: " + lineData.length + "/" + 2;
+                if (lineCounter >= 2) {
+                    lines.push(new Line(lineData[0], lineData[1], userColor));
+                    lineCounter = 1;
+                    lineData = [];
+                    graphInfo = "Drawing Line: ";
+                } else {
+                    lineCounter++;
+                }
+            }
+
+            //needed to count mouse clicks and register coordinates
+            var curveCounter = 1;
+            var curveData = [];
+            var curves = [];
+            function resetCurves() {
+                curveCounter = 1;
+                curveData = [];
+                curves = [];
+            }
+            function manageCurve() {
+                var m = getCanvasMouse(canvasObjects[0]), x = m.x, y = m.y;
+                curveData.push(new Point(x, y));
+                graphInfo = "Drawing Curve: " + curveData.length + "/" + 3;
+                if (curveCounter >= 3) {
+                    curves.push(new Curve(curveData[0], curveData[1], curveData[2], userColor));
+                    curveCounter = 1;
+                    curveData = [];
+                    graphInfo = "Drawing Curve: ";
+                } else {
+                    curveCounter++;
+                }
+            }
+            //needed to count mouse clicks and register coordinates
+            var splineCounter = 1;
+            var splineData = [];
+            var splines = [];
+            var markers = [];
+            function resetSplines() {
+                splineCounter = 1;
+                splineData = [];
+                splines = [];
+                markers = [];
+            }
+            function manageSpline() {
+                var m = getCanvasMouse(canvasObjects[0]), x = m.x, y = m.y;
+                var pt = new Point(x, y);
+                splineData.push(pt);
+                markers.push(pt);
+                graphInfo = "Drawing Spline: " + splineData.length + "/" + curvePointLimit;
+                if (splineCounter >= curvePointLimit) {
+                    splines.push(new Spline(splineData, userColor));
+                    splineCounter = 1;
+                    splineData = [];
+                    graphInfo = "Drawing Spline: ";
+                } else {
+                    splineCounter++;
+                }
+            }
+
+            function createTextForm() {
+                var id = "testForm";
+                createContainer(id, "mainContainer", "rgba(250,250,250,0.5)");
+                canBeMoved("testForm");
+
+                var h = scr.h - (screenSpace.top + screenSpace.marginBorder);
+                var w = screenSpace.left - screenSpace.marginBorder;
+                var top = screenSpace.top;
+                updateScreenSpace(h, w);
+
+                st(id, "width", w + "px");
+                st(id, "height", h + "px");
+                st(id, "top", top + "px");
+                st(id, "left", 0 + "px");
+
+                for (var i = 1; i < exercise.questions.length + 1; i++) {
+                    var id1 = "q" + i;
+                    createContainer(id1, id, "transparent");
+                    createText(exercise.questions[i - 1], id1, "black");
+                    input("Question" + i, id1, 50);
+//                    el.to("Question" + i, defaultUserValues);
+                    el.get("Question" + i).placeholder = "Acetylcholine,Butrylcholine,Carbachol,Methacholine";
+                }
+                multipleChoice("multiChoice", id, exercise.multiChoice.question, shuffle(exercise.multiChoice.choices));
+            }
+
+            function theme(color) {
+                for (var i = 0; i < transparentElements.length; i++) {
+                    var id = transparentElements[i];
+                    st(id, "backgroundColor", color);
+                }
+            }
+
+//from http://stackoverflow.com/questions/6274339/how-can-i-shuffle-an-array-in-javascript
+            function shuffle(a) {
+                var j, x, i;
+                for (i = a.length; i; i--) {
+                    j = Math.floor(Math.random() * i);
+                    x = a[i - 1];
+                    a[i - 1] = a[j];
+                    a[j] = x;
+                }
+                return a;
+            }
+        </script>
+    </body>
+</html>

@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<!--/**
+* The MIT License (MIT) Copyright (c)
+* 
+* <2016><Gintaras Koncevicius>(@author Ubaby)
+* 
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+* 
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+* 
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+* SOFTWARE.
+*/-->
+<html lang='en'>
+    <head>
+        <title>Lecturer's Page</title>
+        <meta property='og:title' content="Cell Receptor and Drug Simulation"/>
+        <meta property='og:type' content='website'/>
+        <meta name='author' content='Ubaby'>
+        <meta charset='UTF-8'>
+        <link rel='shortcut icon' href='favicon.ico' type='image/x-icon'/>
+        <link id='mainStyle' href='styles.css' rel='stylesheet' type='text/css'/>
+        <style>
+            body{
+                background-image: url("siteImages/bgr4.JPG");
+                background-color: #cccccc;
+                background-size:cover;
+            }
+            .break:after{
+                content:"\000A";
+                white-space: pre;
+            }
+
+            td{
+                background-color:white;
+                margin:15px;
+                border-color: rgb(200,200,200);
+                border-radius:5px;
+                border-style:solid;
+                border-width:1px 1px 1px 1px;
+                border-color:white darkgrey darkgrey lightgrey ;
+                box-shadow: 2px 2px 10px 0px black;
+            }
+
+        </style>
+    </head>
+    <body>
+        <script src='javascript/allFunctions.js' type='text/javascript'></script>
+        <script src='javascript/binding-assay-exercise-data.js' type='text/javascript'></script>
+        <div id="mainContainer" ></div>
+        <div  style="background-color:white;" class="container border shadow" id="answer"></div>
+        <script>
+            //GLOBAL variables from custom library at ufunctions100.js
+            var color = logo(), color2 = logo2(), cv = H.cnv, canvasObjects = [], resp = "", cvobj,
+                    ran = H.ran, check = H.check.nearMouse,
+                    el = H.el, st = el.st, str = H.str, cls = el.cls,
+                    num = H.num, o = H.obj, arr = H.arr,
+                    scr = getScreen(), movableElement = "",
+                    fullRadian = Math.PI * 2, canMove = false, movableElement = "";
+            function error(e) {
+                check(e);
+                var id = "checkNearMouse";
+                st(id, "backgroundColor", color2.red);
+            }
+
+            //globals of commonly used variables (following Java style or private String blablabla, so that required  methods could access it)
+            var mc = "mainContainer", ct = "centeredInput", correctAnswerAreaId = "correctAnswerAreaId";
+            var lecturerPassword = "111";//test purpose
+            var exerciseType = "";
+            var correctAnswer = "";
+            var currentStudent = "";
+            var studentAnswer = "";
+            var ACCEPTABLE_MISTAKE_MARGIN = 10;
+
+            //SPLITTERS
+            var stringToSplitPasswordData = "stringToSplitPasswordData";
+            var stringToSplitQuery = "stringToSplitQuery";
+            var columnSplitter = "columns";
+            var userInputsSplitter = "userInputsSplitter";
+            var userInputTasksSplitter = "userInputTasksSplitter";
+            var imageSplitIndicator = "thisStringHasImage";
+
+            //POSTS
+            var lecturerLogin_POST = "lecturerLogin";
+            var lecturerViewStudentNames_POST = "getStudentNames";
+            var lecturerViewStudent_POST = "viewStudent";
+            var lecturerViewAnswer_POST = "viewAnswer";
+            var lecturerRemoveStudent_POST = "removeStudent";
+            var lecturerChangeExercisePassword_POST = "lecturerChangeExercisePassword";
+
+            //RESPONSES
+            var students_RESPONSE = "students";
+            var student_RESPONSE = "student";
+            var answer_RESPONSE = "answer";
+            var removeStudent_RESPONSE = "removedStudent";
+            var login_RESPONSE = "correctPassword";
+            var changeExercisePassword_RESPONSE = "changedPassword";
+
+            var somewhatTransparent = "rgba(250,250,250,0.5)";
+
+//DEBUG
+         enableLogin();
+//            lecturerPassword = "111";
+//            main();
+
+            function enableLogin() {
+                var id = "login";
+                createContainer(id);
+                createInput("password", id, "Enter Lecturer's Password", "");
+                createButton("Start", id, color.green, function () {
+                    lecturerPassword = clean(el.from("inputpassword"));
+                    submVal(lecturerLogin_POST, lecturerPassword);
+                });
+                toCorner(id);
+            }
+
+            var lateReply = true;
+            var lateChecker = "";
+            function manageLateReply() {
+                if (lateReply) {
+                    lateChecker = setTimeout(function () {
+                        if (!resp) {
+                            error("3 seconds passed, slow internet or wrong password.");
+                        }
+                    }, 3000);
+                }
+                lateReply = false;
+            }
+
+            function submVal(key, val) {
+                var post = key + "=" + val;
+                var page = "lecturerDBM.php";
+                var connection = new serverClient(page, post);
+                connection.connect();
+                manageLateReply();
+                var tempInterval = setInterval(function () {
+                    //resp is global and must be = "" once used, getResponse() is one time use, and becomes = "" to be ready for next response
+                    resp = getResponse();
+                    if (resp !== "") {
+                        clearInterval(tempInterval);
+                        clearTimeout(lateChecker);
+                        var responseData = resp.split("Response");
+                        var type = responseData[0];
+                        var data = responseData[1];
+
+                        if (type === login_RESPONSE) {
+                            el.rem("login");
+                            main();
+                        } else if (type === students_RESPONSE) {
+                            displayStudents(data.split("rows"));
+                        } else if (type === student_RESPONSE) {
+                            studentAnswer = data;
+                            displayStudent(data);
+                        } else if (type === answer_RESPONSE) {
+                            loadAnswer(data);
+                        } else if (type === removeStudent_RESPONSE) {
+                            check("Removed Student: " + currentStudent);
+                            cleanMain();
+                            enableReviewing(exerciseType);
+                        } else if (type === changeExercisePassword_RESPONSE) {
+                            check("Changed exercise password.");
+                        }
+                        resp = "";
+                    }
+                }, 500);
+            }
+
+            function loadAnswer(data) {
+                correctAnswer = data;
+                el.inn("answer", "Main Correct Answers For " + exerciseType + " are: " + data);
+            }
+
+            function getAnswer(exercise) {
+                submVal(lecturerViewAnswer_POST, lecturerPassword + stringToSplitPasswordData + exercise);
+            }
+
+            function displayStudent(data) {
+                if (exerciseType === "agonists") {
+                    cleanMain();
+                    displayAgonistStudentData(data);
+                }
+                if (exerciseType === "antagonist") {
+                    cleanMain();
+                    displayAntagonistStudentData(data);
+                }
+                if (exerciseType === "binding-assay") {
+                    cleanMain();
+                    displayBindingAssayData(data);
+                }
+                if (exerciseType === "pharmacokinetics") {
+                    cleanMain();
+                    displayPharmacokinetics(data);
+                }
+            }
+
+            function displayPharmacokinetics(data) {
+                var doubleMarginBorder = (1 + 3) * 8;/*does not work*/
+                var columns = data.split(columnSplitter);
+                var student = columns[0];
+                var exercise = columns[1];
+                var answers = columns[2].split(userInputsSplitter);
+                var images = columns[3].split(imageSplitIndicator);
+
+                createContainer("header", mc, somewhatTransparent);
+                st("header", "width", (scr.w - doubleMarginBorder) + "px");
+                createText("Exercise: " + "Task 4, Pharmacokinetics", "header");
+                createText("Student: " + currentStudent, "header");
+                createButton("Back", "header", color.blue, function () {
+                    cleanMain();
+                    enableReviewing(exerciseType);
+                });
+                st("header", "backgroundColor", "white");
+                cls("Back", "butLight click break");
+
+                var cts = ["leftContainer", "rightContainer", "botContainer1"];
+                var lw = scr.w - doubleMarginBorder;
+                var lh = scr.h - doubleMarginBorder;
+                for (var i = 0; i < cts.length; i++) {
+                    var ct = cts[i];
+                    createContainer(ct, mc, somewhatTransparent);
+                    st(ct, "width", lw + "px");
+                    if (i > 0) {
+                        st(ct, "height", lh + "px");
+                    }
+                }
+                st(cts[1], "float", "left");
+                st(cts[2], "float", "left");
+                lw -= doubleMarginBorder;
+                displayImage(images[0], cts[1], lw, lh);
+                displayImage(images[1], cts[2], lw, lh);
+
+                //1,0,4,4,8,5userInputsSplitter1,9,6,1,9,3,0,1
+                var titles = ["One Compartmental", "Two Compartmental"];
+                var subtitles1 = ["CP<sub>0</sub>", "Kel", "t<sub>1/2</sub>", "Vd", "AUC", "CL<sub>tot</sub>"];
+                var subtitles2 = ["CP<sub>0</sub>", "Kelα", "Kelβ", "t<sub>1/2α</sub>", "t<sub>1/2β</sub>", "Vd", "AUC", "CL<sub>tot</sub>"];
+
+                var table = "<table BORDER=0 CELLPADDING=0 CELLSPACING=5 WIDTH=100% style=\"border-color:lightgrey\">";
+                table += getHTMLRow(titles[0], subtitles1);
+                table += getHTMLRow("", answers[0].split(","));
+                table += getHTMLRow(titles[1], subtitles2);
+                table += getHTMLRow("", answers[1].split(","));
+                table += "</table>";
+                var id = "inputs";
+                createContainer(id, cts[0], color.blue);
+                el.inn(id, table);
+                st(id, "clear", "both");
+
+
+
+                var correctParts = correctAnswer.split(";").join(",").split(",");
+                var userAnswer = (answers[0] + "," + answers[1]).split(",");
+
+                var howClose = getHowSimilar(correctParts, userAnswer);
+
+                var correctness = num.chop((100 - howClose), 3);
+                var error = 100 - correctness;
+                if (error > ACCEPTABLE_MISTAKE_MARGIN) {
+                    createText("Total Correctness checking all: " + num.chop(correctness, 4) + "%", "header", color.red);
+                } else {
+                    createText("Total Correctness checking all: " + num.chop(correctness, 4) + "%", "header", color.green);
+                }
+
+            }
+
+            function displayBindingAssayData(data) {
+                var doubleMarginBorder = (1 + 3) * 8;/*does not work*/
+                var columns = data.split(columnSplitter);
+                var student = columns[0];
+                var exercise = columns[1];
+                var answers = columns[2].split(userInputsSplitter);
+                var images = columns[3].split(imageSplitIndicator);
+
+                createContainer("header", mc, somewhatTransparent);
+                st("header", "width", (scr.w - doubleMarginBorder) + "px");
+                createText("Exercise: " + "Task 3, Binding Assay", "header");
+                createText("Student: " + currentStudent, "header");
+                createButton("Back", "header", color.blue, function () {
+                    cleanMain();
+                    enableReviewing(exerciseType);
+                });
+                st("header", "backgroundColor", "white");
+                cls("Back", "butLight click break");
+
+                var cts = ["leftContainer", "rightContainer", "botContainer1", "botContainer2", "botContainer3", "botContainer4"];
+                var lw = scr.w - doubleMarginBorder;
+                var lh = scr.h - doubleMarginBorder;
+                for (var i = 0; i < cts.length; i++) {
+                    var ct = cts[i];
+                    createContainer(ct, mc, somewhatTransparent);
+                    st(ct, "width", lw + "px");
+                    if (i > 0) {
+                        st(ct, "height", lh + "px");
+                    }
+                }
+                st(cts[1], "float", "left");
+                st(cts[2], "float", "left");
+
+                lw -= doubleMarginBorder;
+                displayImage(images[0], cts[1], lw, lh);
+                displayImage(images[1], cts[2], lw, lh);
+                displayImage(images[2], cts[3], lw, lh);
+                displayImage(images[3], cts[4], lw, lh);
+                displayImage(images[4], cts[5], lw, lh);
+
+//0,0,0,0,0,0,0userInputsSplitter
+//0,0,0,0userInputTasksSplitter0,0,0,0userInputsSplitter
+//0,0,0,0,0,0,0,0,0,0,0userInputTasksSplitter0,0,0,0,0,0,0,0,0,0,0userInputTasksSplitter0,0,0,0,0,0,0,0,0,0,0
+//userInputsSplitter0,0,0userInputsSplitter
+
+                answers = answers.join(userInputsSplitter).split(userInputTasksSplitter).join(userInputsSplitter).split(userInputsSplitter);
+                var titles = [task1[2][3], task2[1][1], task2[1][2], task3[3][3], task3[3][5], task3[3][7], task4[3][1]];
+                var id = "answers";
+                var table = "<table BORDER=0 CELLPADDING=0 CELLSPACING=5 WIDTH=100% style=\"border-color:lightgrey\">";
+                for (var i = 0; i < answers.length - 1; i++) {
+                    var answer = answers[i];
+                    table += getHTMLRow(i + ". " + titles[i], answer.split(","));
+                }
+                table += "</table>";
+                createContainer(id, cts[0], color.blue);
+                el.inn(id, table);
+                st(id, "clear", "both");
+
+                var correctParts = correctAnswer.split(";");
+                var correctKds = [];
+                var correctBmax = [];
+                for (var counter = 0; counter < correctParts.length - 1; counter++) {
+                    var cur = correctParts[counter].split(",");
+                    correctKds.push(cur[0]);
+                    correctBmax.push(cur[1]);
+                }
+
+                var correctAnswerArray = (correctKds.join(",") + "," + correctBmax.join(",") + "," + correctParts[4]).split(",");
+                var userAnswer = (answers[1] + "," + answers[2] + "," + answers[answers.length - 2]).split(",");
+                var howClose = getHowSimilar(correctAnswerArray, userAnswer);
+
+                var correctness = num.chop((100 - howClose), 3);
+                var error = 100 - correctness;
+                if (error > ACCEPTABLE_MISTAKE_MARGIN) {
+                    createText("Total Correctness checking Kd, Bmax, Ki: " + num.chop(correctness, 4) + "%", "header", color.red);
+                } else {
+                    createText("Total Correctness checking Kd, Bmax, Ki: " + num.chop(correctness, 4) + "%", "header", color.green);
+                }
+            }
+
+            function displayAntagonistStudentData(data) {
+                var doubleMarginBorder = (1 + 3) * 8;/*does not work*/
+                var columns = data.split(columnSplitter);
+                var student = columns[0];
+                var exercise = columns[1];
+                var answers = columns[2].split(userInputsSplitter);
+                var images = columns[3].split(imageSplitIndicator);
+
+                createContainer("header", mc, somewhatTransparent);
+                st("header", "width", (scr.w - doubleMarginBorder) + "px");
+                createText("Exercise: " + "Task 2, Antagonists", "header");
+                createText("Student: " + currentStudent, "header");
+                createButton("Back", "header", color.blue, function () {
+                    cleanMain();
+                    enableReviewing(exerciseType);
+                });
+                st("header", "backgroundColor", "white");
+                cls("Back", "butLight click break");
+
+                var cts = ["leftContainer", "rightContainer", "botContainer"];
+                var lw = scr.w - doubleMarginBorder;
+                var lh = scr.h - doubleMarginBorder;
+                for (var i = 0; i < cts.length; i++) {
+                    var ct = cts[i];
+                    createContainer(ct, mc, somewhatTransparent);
+                    st(ct, "width", lw + "px");
+                    if (i > 0) {
+                        st(ct, "height", lh + "px");
+                    }
+                }
+                st(cts[1], "float", "left");
+                st(cts[2], "float", "left");
+
+                lw -= doubleMarginBorder;
+                displayImage(images[0], cts[1], lw, lh);
+                displayImage(images[1], cts[2], lw, lh);
+
+                var titles = ["Log [Agonist](ng/ml)", "Log EC50", "EC50 (ng/ml)", "Molar EC50", "Dose-shift ratio (DR)", "DR-1", "Log of DR-1", "MOLAR antagonist concentration", "Log molar antagonist concentration", "-log of molar antagonist concentration", "pA2"];
+
+                var table = "<table BORDER=0 CELLPADDING=0 CELLSPACING=5 WIDTH=100% style=\"border-color:lightgrey\">";
+                var id = "answers";
+                createContainer(id, cts[0], color.blue);
+                for (var i = 0; i < answers.length; i++) {
+                    var answer = answers[i];
+                    table += getHTMLRow(titles[i], answer.split(","));
+                    if (i === answers.length - 1) {
+                        var pa2 = answers[answers.length - 1];
+                        var howClose = getHowSimilar([pa2], [correctAnswer]);
+                        var correctness = num.chop((100 - howClose), 3);
+                        var error = 100 - correctness;
+                        if (error > ACCEPTABLE_MISTAKE_MARGIN) {
+                            createText("Correctness checking pA2: " + num.chop(correctness, 4) + "%", "header", color.red);
+//                            createContainer(id, cts[0], color.red);
+                        } else {
+                            createText("Correctness checking pA2: " + num.chop(correctness, 4) + "%", "header", color.green);
+//                            createContainer(id, cts[0], color.blue);
+                        }
+                    }
+                }
+                table += "</table>";
+                el.inn(id, table);
+                st(id, "clear", "both");
+            }
+
+            function displayImage(src, where, w, h) {
+                var ct = "graph" + where;
+                createContainer(ct, where, "white");
+                cls(ct, "container");
+                st(ct, "height", h + "px");
+                st(ct, "width", w + "px");
+                var image = new Image();
+                src = "studentImages/" + src;
+                image.src = src;
+                el.tag("image" + ct, "img", ct);
+                el.get("image" + ct).setAttribute("src", src);
+            }
+
+            function displayAgonistStudentData(string) {
+                var doubleMarginBorder = (1 + 3) * 8;
+                createContainer("header", mc, somewhatTransparent);
+                el.inn("header", "");
+                createText("Exercise: " + "Task 1, Agonists", "header");
+                createText("Student: " + currentStudent, "header");
+                st("header", "width", (scr.w - doubleMarginBorder) + "px");
+
+                var lw = scr.w - doubleMarginBorder;
+                var lh = scr.h - doubleMarginBorder;
+                var left = "leftContainer", right = "rightContainer";
+                createContainer(left, mc, somewhatTransparent);
+                createContainer(right, mc, somewhatTransparent);
+                st(left, "width", lw + "px");
+                st(right, "width", lw + "px");
+//                st(left, "height", lw + "px");
+                st(right, "height", lh + "px");
+
+                var data = string.split("columns");
+                var src = data[data.length - 1];
+                var studentData = data[2].split("stringToSplitStudentData");
+                var questions = studentData[0].split("stringToSplitQuestions");
+                var compounds = studentData[1].split("stringToSplitCompounds");
+                el.rem("reviewing");
+
+                var ids = ["questions", "compound"];
+                for (var i = 0; i < ids.length; i++) {
+                    var cur = ids[i];
+                    el.div(cur, left);
+//                    createContainer(cur, left, "transparent");
+                }
+                createContainer("graph", right, "transparent");
+                st("graph", "width", lw + "px");
+                st("graph", "height", lh + "px");
+                cls("graph", "container");
+
+                var totalCorrectness = 0;
+                var correctGroups = correctAnswer.split(";");
+                for (var i = 0; i < questions.length; i++) {
+                    var cur = questions[i];
+                    var txt = i + "txt";
+                    cur = str.replSym(cur, "&nbsp", " ");
+                    var correctColor = color.red;
+
+                    if (i === 0) {
+                        if (cur === correctGroups[0]) {
+                            correctColor = color.green;
+                            totalCorrectness += 100;
+                        }
+                    }
+                    if (i === 1) {
+                        if (cur === correctGroups[1]) {
+                            correctColor = color.green;
+                            cur = "Correct";
+                            totalCorrectness += 100;
+                        } else {
+                            cur = "Wrong";
+                        }
+                    }
+                    createContainer(txt, "questions", correctColor);
+                    createText("Question " + (i + 1) + ": ", txt, "black");
+                    createText("Answer: " + cur, txt, "black");
+                }
+
+                for (var i = 0; i < compounds.length; i++) {
+                    var cur = compounds[i];
+                    var compoundData = cur.split(";");
+                    var title = compoundData[0];
+                    var concentration = compoundData[1];
+                    var log = compoundData[2];
+
+                    var efficacy = compoundData[3];
+                    var potency = compoundData[4];
+
+                    var pd = compoundData[5];
+                    var correctness = displayCompound(i, title, concentration, log, efficacy, potency, pd);
+                    totalCorrectness += correctness;
+                }
+
+                totalCorrectness /= (2 + compounds.length);
+                var error = 100 - totalCorrectness;
+                if (error > ACCEPTABLE_MISTAKE_MARGIN) {
+                    createText("Total Correctness checking efficacy, potency, pD2 and question answers: " + num.chop(totalCorrectness, 4) + "%", "header", color.red);
+                } else {
+                    createText("Total Correctness checking efficacy, potency, pD2 and question answers: " + num.chop(totalCorrectness, 4) + "%", "header", color.green);
+                }
+
+                createButton("Back", "header", color.blue, function () {
+                    cleanMain();
+                    enableReviewing(exerciseType);
+                });
+                st("header", "backgroundColor", "white");
+                cls("Back", "butLight click break");
+
+                var h = scr.h;
+                var image = new Image();
+                st("graph", "height", (h - doubleMarginBorder) + "px");
+                src = "studentImages/" + src;
+                image.src = src;
+                el.tag("image", "img", "graph");
+                el.get("image").setAttribute("src", src);
+            }
+
+            function displayCompound(i, title, concentration, log, efficacy, potency, pd) {
+                var id = title, id2 = id + "txt", id3 = id + "cpd";
+                createContainer(id, "compound", "grey");
+                createContainer(id2, id, color.blue);
+                createContainer(id3, id, color.blue);
+                createText(title, id2, "black");
+
+                var correctGroups = correctAnswer.split(";");
+                var correctCompound = correctGroups[i + 2].split(",");
+
+                var arr1 = [efficacy, potency, pd];
+                var arr2 = [correctCompound[0], correctCompound[1], correctCompound[2]];
+                var howClose = getHowSimilar(arr1, arr2);
+
+                createText("Efficacy: " + efficacy, id2, "black");
+                createText("Potency: " + potency, id2, "black");
+                createText("pD2: " + pd, id2, "black");
+
+                var correctness = num.chop((100 - howClose), 3);
+                var error = 100 - correctness;
+                if (error > ACCEPTABLE_MISTAKE_MARGIN) {
+                    createText("Correctness checking efficacy, potency, pD2: " + correctness + "%", id2, color.red);
+                } else {
+                    createText("Correctness checking efficacy, potency, pD2:" + correctness + "%", id2, color.green);
+                }
+
+                var table = "<table BORDER=0 CELLPADDING=0 CELLSPACING=5 WIDTH=100% style=\"border-color:lightgrey\">";
+                table += getHTMLRow("Concentration", concentration);
+                table += getHTMLRow("log Concentration", log);
+                table += "</table>";
+                var idt = i + "" + "0";
+                createContainer(idt, id3);
+                el.inn(idt, table);
+                return correctness;
+            }
+
+            function getHowSimilar(arr1, arr2) {
+                var average = 0;
+                for (var counter = 0; counter < arr1.length; counter++) {
+                    var cur1 = parseFloat(arr1[counter]);
+                    var cur2 = parseFloat(arr2[counter]);
+
+                    var diff = percentageDifference(cur1, cur2);
+                    average += diff;
+                }
+                return average / arr1.length;
+            }
+
+            function percentageDifference(a, b) {
+                var diff = a - b;
+                if (diff < 0) {
+                    diff *= -1;
+                }
+                return (diff / ((a + b) / 2)) * 100;
+            }
+
+//depend on what excercise students...
+            function displayStudents(studentList) {
+                var id = "manageStudents";
+                if (el.is(id)) {
+                    el.rem(id);
+                }
+                createContainer(id, mc, "transparent");
+                if (isUsableArray(studentList)) {
+                    for (var i = 0; i < studentList.length; i++) {
+                        var cur = studentList[i];
+                        createContainer(cur, id, "transparent");
+                        st(cur, "clear", "both");
+                        createUniqueButton("View: " + cur, cur, cur, color.green, function () {
+                            var student = this.parentNode.id;
+                            currentStudent = student;
+//                            var lecturer=clean(lecturerPassword);
+                            submVal(lecturerViewStudent_POST, lecturerPassword + stringToSplitPasswordData + exerciseType + stringToSplitQuery + student);
+                        });
+                        createUniqueButton("Remove: " + cur, cur, "Remove", color.red, function () {
+                            var student = this.parentNode.id;
+                            currentStudent = student;
+//                            var lecturer=clean(lecturerPassword);
+                            submVal(lecturerRemoveStudent_POST, lecturerPassword + stringToSplitPasswordData + student + stringToSplitPasswordData + exerciseType);
+                        });
+                        //createText("Result: ",calculateResult(cur,whichExcercise));
+                    }
+                } else {
+                    error("no students");
+                }
+                createButton("Back", id, color.blue, function () {
+                    cleanMain();
+                    main();
+                });
+                st("Back", "clear", "both");
+                toCorner(id);
+            }
+
+            function isUsableArray(arr) {
+                if (arr) {
+                    if (arr.length > 0) {
+                        if (arr[0]) {
+                            if (arr[0].length > 0) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+
+            function main() {
+                //el.div(mc);
+                createWhichExcerciseMenu();
+            }
+
+            function createWhichExcerciseMenu() {
+                var id = "menu";
+                if (el.is(id)) {
+                    el.rem(id);
+                }
+//                createContainer(id, "menuContainer", "transparent");
+                el.div(id);
+                cls(id, "container border shadow");
+                createText("Which Excercise", id, "black");
+                createButton("Agonists", id, color.green, function () {
+                    exerciseType = "agonists";
+                    enableReviewing(exerciseType);
+                });
+                createButton("Antagonists", id, color.green, function () {
+                    exerciseType = "antagonist";
+                    enableReviewing(exerciseType);
+                });
+                createButton("Binding Assay", id, color.green, function () {
+                    exerciseType = "binding-assay";
+                    enableReviewing(exerciseType);
+                });
+                createButton("Pharmacokinetics", id, color.green, function () {
+                    exerciseType = "pharmacokinetics";
+                    enableReviewing(exerciseType);
+                });
+                createButton("Change Excercise Password", id, color.green, function () {
+                    enableChangingPassword();
+                });
+                toCorner(id);
+            }
+
+            function enableReviewing(excerciseType) {
+                if (el.is("menu")) {
+                    el.rem("menu");
+                }
+                cleanMain();
+                var id = "viewableStudents";
+                createContainer(id, mc, "transparent");
+                submVal(lecturerViewStudentNames_POST, lecturerPassword + stringToSplitPasswordData + excerciseType);
+
+                setTimeout(function () {
+                    getAnswer(excerciseType);
+                }, 500);
+            }
+
+            function enableChangingPassword() {
+                if (el.is("menu")) {
+                    el.rem("menu");
+                }
+                cleanMain();
+                //main();
+                var input1 = "lecturerPassword";
+                var input2 = "newExcercisePassword";
+                var id = "changePw";
+
+                createContainer(id, mc, "transparent");
+                createInput(input1, id, "Lecturer Password", "");
+                createInput(input2, id, "New Excercise Password", "");
+                el.tag("hr" + id, "hr", id);
+                createButton("Submit", id, color, function () {
+                    var pw1 = el.from("input" + input1);
+                    var pw2 = el.from("input" + input2);
+                    submVal(lecturerChangeExercisePassword_POST, pw1 + stringToSplitPasswordData + pw2);
+                    cleanMain();
+                    main();
+                });
+                createButton("Back", id, color.blue, function () {
+                    cleanMain();
+                    main();
+                });
+                toCorner(id);
+            }
+
+            function cleanMain() {
+                el.inn(mc, "");
+            }
+
+            function decideGraphDimensions(dataForGraph) {
+                if (scr.w < 1280) {
+                    createTextForm();
+                    enableGraph2(dataForGraph);
+                } else {
+                    enableGraph(dataForGraph);
+                    createTextForm();
+                }
+            }
+
+            function createGraphData() {
+                var x = [], y = [], compound = {title: "Graph",
+                    concentration: 10,
+                    xName: "Log Concentration",
+                    yName: "Response", xValues: "", yValues: ""};
+                var organBathVolume = excercise.organBathVolume;
+                for (var i = 0; i < excercise.compounds.length; i++) {
+                    var c = excercise.compounds[i];
+                    var curX = c.xValues;
+                    var curY = c.yValues;
+                    var stockConcentration = c.concentration;
+                    for (var j = 0; j < curX.length; j++) {
+                        var stockVolume = curX[j];
+                        var correctConcentration = calculateConcentration(organBathVolume, stockVolume, stockConcentration);
+                        var correctLog = calculateLog(correctConcentration);
+                        x.push(round(correctLog, 3));
+                    }
+                    y = y.concat(curY);
+                }
+                compound.xValues = arr.copy(x);
+                compound.yValues = arr.copy(y);
+                return compound;
+            }
+
+            function calculateConcentration(mainVolume, stockVolume, stockConcentration) {
+                return ((stockVolume / mainVolume) * stockConcentration);
+            }
+
+            function calculateLog(concentration) {
+                return Math.log10(concentration);
+            }
+
+            function getHTMLRow(name, data) {
+                data = (name + "," + data).split(",");
+                var row = toHTMLRow(data);
+                return row;
+            }
+
+            function toHTMLRow(rowArr) {
+                var row = "";
+                for (var i = 0; i < rowArr.length; i++) {
+                    var val = rowArr[i];
+                    row += columnHTML(val);
+                }
+                return  rowHTML(row);
+            }
+
+            function columnHTML(s, nice) {
+                if (nice) {
+                    return "<td class='nicetd'>" + s + "</td>";
+                }
+                return "<td style='background-color:" + "rgba(250,250,250,1)" + ";'><center>" + s + "</center></td>";
+            }
+
+            function rowHTML(s) {
+                return "<tr>" + s + "</tr>";
+            }
+
+            function displayColumn(colimnId, compoundContainer, title, data, color) {
+                createContainer(colimnId, compoundContainer, color);
+                st(colimnId, "maxWidth", 100 + "px");// * (50 + 20) + 150 + "px");
+                //                st(name, "width", data.length * (50 + 20) + 150 + "px");
+                createText(title, colimnId, "black", 100, 5, 60);
+                for (var i = 0, max = data.length; i < max; i++) {
+                    var val = data[i],
+                            inputId = colimnId + "" + i;
+                    input(inputId, colimnId, 20);
+                    el.to(inputId, val);
+                }
+            }
+
+            //HELPERS
+            //utility
+            function arrToNumericArr(a1) {
+                var a2 = new Array(a1.length);
+                for (var i = 0; i < a1.length; i++) {
+                    a2[i] = parseFloat(a1[i]);
+                }
+                return a2;
+            }
+
+            //utility
+            function isGoodNumber(n) {
+                return n && isNum(n) && isClean(n);
+            }
+
+            //utility
+            function isClean(w) {
+                w = w.toLowerCase();
+                if (w === clean(w)) {
+                    return true;
+                }
+                var bad = ["script", "<", ">", "'", "\"", "\\", "/"];
+                if (!el.is("checkNearMouse")) {
+                    error("These symbols are not accepted: " + bad.join(", "));
+                }
+                return false;
+            }
+
+            //utility
+            function isNum(n) {
+                return !isNaN(n);
+            }
+
+            //utility
+            //screenspace needed to simulate relative elements based on percentage, but avoid empty gaps
+            //            var screenSpace = {h: "", w: "", marginSides: "", borderSides: "", marginBorder: "", top: "", left: "", temporarySwap: ""};
+            function initScreenSpace(w, h) {
+                screenSpace.w = w;
+                screenSpace.h = h;
+                screenSpace.top = 0;
+                screenSpace.left = 0;
+                screenSpace.marginSides = 2 * 3;
+                screenSpace.borderSides = 2 * 3;
+                screenSpace.marginBorder = screenSpace.marginSides + screenSpace.borderSides;
+            }
+
+            //utility
+            function updateScreenSpace(w, h) {
+                var borderMargin = screenSpace.marginBorder;
+                if (w !== 0) {
+                    screenSpace.w -= (w + borderMargin);
+                    screenSpace.left += (w + borderMargin);
+                }
+                if (h !== 0) {
+                    screenSpace.h -= (h + borderMargin);
+                    screenSpace.top += (h + borderMargin);
+                }
+            }
+
+            //utility
+            function clean(inp) {
+                var dirty = ["script", "<", ">", "'", "\"", "\\", "/"];
+                for (var i = 0, max = dirty.length; i < max; i++) {
+                    var cur = dirty[i];
+                    inp = str.replSym(inp, cur, "");
+                }
+                return inp;
+            }
+
+            //utility
+            function round(num, how) {
+                var power = Math.pow(10, how);
+                return Math.round(num * power) / power;
+            }
+
+            //utility
+            function input(id, where, size) {
+                var input = document.createElement("textarea");
+                input.setAttribute("id", id);
+                input.setAttribute("type", "text");
+                input.setAttribute("name", id);
+                document.getElementById(where).appendChild(input);
+                st(id, "resize", "none");
+                st(id, "width", "50px");
+                st(id, "height", "15px");
+                st(id, "float", "left");
+                if (size) {
+                    st(id, "width", size * 3.14 + "px");
+                    st(id, "height", size + "px");
+                }
+            }
+
+            //utility
+            function multipleChoice(id, where, question, choices) {
+                createContainer(id, where, "transparent");
+                createText(question + ", select best answer in selection box.", id, "black");
+                var m = "multiChoicesContainer";
+                var s = "select1";
+                createContainer(m, id);
+                el.tag(s, "select", m);
+                var e = el.get(s);
+                e.setAttribute("size", 1);
+
+                for (var i = 0; i < choices.length; i++) {
+                    createText((i + 1) + ". " + choices[i], id, "black");
+                }
+                for (var i = 0; i < choices.length; i++) {
+                    var id2 = s + i;
+                    createOption(id2, s, (i + 1));
+                }
+            }
+
+            //utility
+            function createOption(id, where, value) {
+                el.tag(id, "option", where);
+                el.txt(id, value);
+                var container = el.get(where);
+                var w = container.offsetWidth;
+                st(id, "width", w + "px");
+            }
+
+            //utility
+            function purifyElement(id) {
+                st(id, "top", "0px");
+                st(id, "left", "0px");
+                st(id, "padding", "0px");
+                st(id, "margin", "0px");
+            }
+
+            //utility
+            function createText(txt, where, color, w, margin, h) {
+                var id = H.ran.int(1000000, 2000000);
+                createContainer(id, where);
+                el.inn(id, txt);
+                if (color) {
+                    st(id, "color", color);
+                }
+                if (w) {
+                    st(id, "minWidth", w + "px");
+                }
+                if (margin) {
+                    st(id, "margin", margin + "px");
+                }
+                if (h) {
+                    st(id, "minHeight", h + "px");
+                }
+            }
+
+            //utility
+            function createContainer(id, where, color) {
+                if (where) {
+                    el.div(id, where);
+                } else {
+                    el.div(id);
+                }
+                el.cls(id, "container border shadow");
+                if (color) {
+                    st(id, "backgroundColor", color);
+                } else {
+                    st(id, "backgroundColor", "white");
+                }
+                st(id, "margin", "3px");
+            }
+
+            //utility
+            function createButton(id, where, color, doWhat) {
+                el.but(id, where);
+                el.click(id, "click", doWhat);
+                st(id, "backgroundColor", color);
+            }
+
+            //utility
+            function createUniqueButton(id, where, txt, color, doWhat) {
+                createContainer(id, where, color);
+                el.get(id).innerHTML = txt;
+                cls(id, "inline butLight click");
+//                el.but(id, where);
+                el.click(id, "click", doWhat);
+                //st(id, "backgroundColor", color);
+            }
+
+            //utility
+            function createMenu(id, where) {
+                if (!el.is(id)) {
+                    createContainer(id, where);
+                    el.closeable(id);
+                } else {
+                    el.rem(id);
+                }
+            }
+
+            //utility
+            function toCorner(id, left, top, x, y, z) {
+                var height = el.get(id).offsetHeight, width = el.get(id).offsetWidth;
+                if (x && y) {
+                    height -= y;
+                    width -= x;
+                }
+                st(id, "position", "absolute");
+                st(id, "margin", "0px");
+                if (z) {
+                    st(id, "zIndex", z);
+                }
+                if (left !== undefined || top !== undefined) {
+                    if (!top) {
+                        st(id, "top", scr.h - height + "px");
+                    }
+                    if (left) {
+                        st(id, "left", 0 + "px");
+                    } else {
+                        st(id, "left", scr.w - width + "px");
+                    }
+                } else {
+                    st(id, "top", (scr.h - height) / 2 + "px");
+                    st(id, "left", (scr.w - width) / 2 + "px");
+                }
+            }
+
+            function arrToStr(arr, spacer) {
+                var str = "";
+                for (var i = 0; i < arr.length; i++) {
+                    var cur = arr[i];
+                    str += cur + spacer;
+                }
+                return str;
+            }
+        </script>
+    </body>
+</html>

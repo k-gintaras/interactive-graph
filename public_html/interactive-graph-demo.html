@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<!--/**
+* The MIT License (MIT) Copyright (c)
+* 
+* <2016><Gintaras Koncevicius>(@author Ubaby)
+* 
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+* 
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+* 
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+* SOFTWARE.
+*/-->
+<html lang='en'>
+    <head>
+        <title>Receptor Binding Assay Exercise Page</title>
+        <meta property='og:title' content="Cell Receptor and Drug Simulation"/>
+        <meta property='og:site_name' content='roflit.com'/>
+        <meta property='og:type' content='website'/>
+        <meta charset='UTF-8'>
+        <meta name='author' content='Ubaby'>
+        <link rel="icon" type="image/x-icon" href="favicon.ico">
+        <!--root folder public_html/-->
+        <link id='mainStyle' href='styles.css' rel='stylesheet' type='text/css'/>
+        <style>
+            body{
+                background-image: url("siteImages/bgr4.JPG");
+                background-color: #cccccc;
+                background-size:cover;
+            }
+
+            textarea{
+                /*width:50px;*/
+                height:20px;
+                resize: none;
+                margin:0px;
+                padding:0px;
+                display:block;//qq
+                border-style:solid;
+                border-width:1px 1px 1px 1px;
+                border-radius: 5px;
+                border-style: none solid solid none;
+                width: 100%;
+            }
+
+            .nicetd{
+                background-color:white;
+                margin:15px;
+                border-color: rgb(200,200,200);
+                border-radius:5px;
+                border-style:solid;
+                border-width:1px 1px 1px 1px;
+                border-color:white darkgrey darkgrey lightgrey ;
+                box-shadow: 2px 2px 10px 0px black;
+            }
+        </style>
+    </head>
+    <body>
+        <script src='javascript/ugraph.js' type='text/javascript'></script>
+        <script src='javascript/ufunctions.js' type='text/javascript'></script>
+        <script src='javascript/binding-assay-exercise-data.js' type='text/javascript'></script>
+        <script src='javascript/helpfulFunctions.js' type='text/javascript'></script>
+        <script>
+            //GLOBAL variables from custom library at ufunctions.js
+            var color = logo(), color2 = logo2(), cv = H.cnv, canvasObjects = [], resp = "", cvobj,
+                    ran = H.ran, check = H.check.nearMouse,
+                    el = H.el, st = el.st, str = H.str, cls = el.cls,
+                    num = H.num, o = H.obj, arr = H.arr,
+                    scr = getScreen(), movableElement = "",
+                    fullRadian = Math.PI * 2, canMove = false, movableElement = "";
+            function error(e) {
+                check(e);
+                var id = "checkNearMouse";
+                st(id, "backgroundColor", color.red);
+            }
+
+//GRAPH USAGE
+            var startingGraphOneSettings = {
+                canvas: "", //mandatory
+                data: exercise.dataOne, //or scale, mandatory
+//THE REST SETTINGS ARE OPTIONAL
+//             setGraphSizeByPieces: true, //by pixels if false
+//             w: 71, //uneven
+//             h: 71, //uneven
+//             x:150,
+//             y:150,
+                offsetX: 0.001, //non zero
+                offsetY: 0.001, //non zero
+                precision: 10, //uneven
+                userCanDraw: true,
+                displayDataPoints: false,
+                displayLessNumbers: true,
+                roundByDigitCount: 2, //how many digits to round the numbers
+                displayNumbersEach: 0.5,
+//                //when displaying less numbers you can use these to align them
+//                bigGridWidth: 5,
+//                bigGridHeight: 5,
+                displayXEach: 0.5,
+                displayYEach: 10,
+                roundXDigits: 2,
+                roundYDigits: 0,
+                displayDataSplines: false,
+                drawSplineMarkers: true,
+                infoNearAxis: "",
+                infoNearMouse: "",
+//                showLastClickedCoordinate: true,
+                showFps: false
+            };
+
+            var startingGraphTwoSettings = {
+                canvas: "", //mandatory
+                data: exercise.dataTwo, //or scale, mandatory
+//THE REST SETTINGS ARE OPTIONAL
+//             setGraphSizeByPieces: true, //by pixels if false
+//             w: 71, //uneven
+//             h: 71, //uneven
+//             x:150,
+//             y:150,
+                offsetX: 0.001, //non zero
+                offsetY: 0.001, //non zero
+                precision: 10, //uneven
+                userCanDraw: true,
+                displayDataPoints: false,
+                displayLessNumbers: false,
+                roundByDigitCount: 2, //how many digits to round the numbers
+                displayNumbersEach: 0.1,
+//                //when displaying less numbers you can use these to align them
+                bigGridWidth: 10 * 5,
+                bigGridHeight: 10 * 5,
+                displayXEach: 0.1,
+                displayYEach: 0.05,
+                roundXDigits: 2,
+                roundYDigits: 2,
+                displayDataSplines: false,
+                drawSplineMarkers: true,
+                infoNearAxis: "",
+                infoNearMouse: "",
+//                showLastClickedCoordinate: true,
+                showFps: false
+            };
+
+            var startingGraphThreeSettings = {
+                canvas: "", //mandatory
+                data: exercise.dataThree, //or scale, mandatory
+//THE REST SETTINGS ARE OPTIONAL
+//             setGraphSizeByPieces: true, //by pixels if false
+//             w: 71, //uneven
+//             h: 71, //uneven
+//             x:150,
+//             y:150,
+                offsetX: 0.001, //non zero
+                offsetY: 0.001, //non zero
+                precision: 10, //uneven
+                userCanDraw: true,
+                displayDataPoints: false,
+                displayLessNumbers: true,
+                roundByDigitCount: 2, //how many digits to round the numbers
+                displayNumbersEach: 0.5,
+//                //when displaying less numbers you can use these to align them
+//                bigGridWidth: 5,
+//                bigGridHeight: 5,
+                displayXEach: 0.5,
+                displayYEach: 10,
+                roundXDigits: 2,
+                roundYDigits: 0,
+                displayDataSplines: false,
+                drawSplineMarkers: true,
+                infoNearAxis: "",
+                infoNearMouse: "",
+//                showLastClickedCoordinate: true,
+                showFps: false
+            };
+
+            var startingGraphFourSettings = {
+                canvas: "", //mandatory
+                data: exercise.dataFour, //or scale, mandatory
+//THE REST SETTINGS ARE OPTIONAL
+//             setGraphSizeByPieces: true, //by pixels if false
+//             w: 71, //uneven
+//             h: 71, //uneven
+//             x:150,
+//             y:150,
+                offsetX: 0.001, //non zero
+                offsetY: 0.001, //non zero
+                precision: 10, //uneven
+                userCanDraw: true,
+                displayDataPoints: false,
+                displayLessNumbers: true,
+                roundByDigitCount: 2, //how many digits to round the numbers
+                displayNumbersEach: 0.5,
+//                //when displaying less numbers you can use these to align them
+//                bigGridWidth: 5,
+//                bigGridHeight: 5,
+                displayXEach: 0.5,
+                displayYEach: 10,
+                roundXDigits: 2,
+                roundYDigits: 0,
+                displayDataSplines: false,
+                drawSplineMarkers: true,
+                infoNearAxis: "",
+                infoNearMouse: "",
+//                showLastClickedCoordinate: true,
+                showFps: false
+            };
+
+            var startingGraphFiveSettings = {
+                canvas: "", //mandatory
+                data: exercise.dataFive, //or scale, mandatory
+//THE REST SETTINGS ARE OPTIONAL
+//             setGraphSizeByPieces: true, //by pixels if false
+//             w: 71, //uneven
+//             h: 71, //uneven
+//             x:150,
+//             y:150,
+                offsetX: 0.001, //non zero
+                offsetY: 0.001, //non zero
+                precision: 10, //uneven
+                userCanDraw: true,
+                displayDataPoints: false,
+                displayLessNumbers: true,
+                roundByDigitCount: 2, //how many digits to round the numbers
+                displayNumbersEach: 0.5,
+//                //when displaying less numbers you can use these to align them
+//                bigGridWidth: 5,
+//                bigGridHeight: 5,
+                displayXEach: 0.5,
+                displayYEach: 10,
+                roundXDigits: 2,
+                roundYDigits: 0,
+                displayDataSplines: false,
+                drawSplineMarkers: true,
+                infoNearAxis: "",
+                infoNearMouse: "",
+//                showLastClickedCoordinate: true,
+                showFps: false
+            };
+//----------------------------------------------------------------------------------------------------------------
+            var mc = "mainContainer", gc = "graphContainer", canvasId = "graph";
+            var graphOne = null;
+            var graphTwo = null;
+            var currentGraph = null;
+            var graphOneLiveSettings = null;
+            var graphTwoLiveSettings = null;
+            var userColor = color.red;
+            var student = {pw: "", name: ""};
+            var savedGraphTwo = false;
+
+            var helpMessage = "Same as agonist graph.";
+            var queryColumnSplitter = "stringToSplitQuery";
+            var userInputsSplitter = "userInputsSplitter";
+            var userInputTasksSplitter = "userInputTasksSplitter";
+            var imageSplitIndicator = "thisStringHasImage";
+
+
+            var defaultUserNoValue = "0";
+            var graphContainerBackgroundColor = "rgba(250,250,250,0.5)";
+
+            var antagonistSubmission_POST = "studentSubmitAntagonist";
+            var bindingAssaySubmission_POST = "studentSubmitBindingAssay";
+            var login_POST = "studentLogin";
+            var goodLogin_RESPONSE = "Correct Password.";
+
+            var activePlot = 0;
+            var plots = ["", "", "", "", ""];
+            var plotsSettings = [startingGraphOneSettings, startingGraphTwoSettings, startingGraphThreeSettings, startingGraphFourSettings, startingGraphFiveSettings];
+            var plotsLiveSettings = ["", "", "", "", ""];
+            var plotsDataUrls = ["", "", "", "", ""];
+
+//MAIN
+            student.name = "ubaby2";//Math.random()*1000;
+            student.pw = "111";
+            el.rem("login");
+            main();
+//            enableLogin();
+//            function enableLogin() {
+//                var id = "login";
+//                createContainer(id);
+//                createInput("user", id, "Enter Student Id/ Ids", "");
+//                createInput("password", id, "Enter Excercise Password", "");
+//                var e = el.get("inputuser");
+//                e.setAttribute("placeholder", "u1234567,u1234567");
+//                createButton("Start", id, color.green, function () {
+//                    student.name = clean(el.from("inputuser"));
+//                    var pw = el.from("inputpassword");
+//                    pw = clean(pw);
+//                    student.pw = pw;
+//                    submVal(login_POST, pw);
+//                });
+//                st(id, "zIndex", 20);
+//                toCorner(id);
+//            }
+//
+//            function submVal(key, val) {
+//                var post = key + "=" + val;
+//                var page = "studentDBM.php";
+//                var connection = new serverClient(page, post);
+//                connection.connect();
+//                manageLateReply();
+//                var tempInterval = setInterval(function () {
+//                    resp = getResponse();
+//                    if (resp !== "") {
+//                        clearInterval(tempInterval);
+//                        clearTimeout(lateChecker);
+//                        var responseData = resp.split("Response");
+////                        var type = responseData[0];
+//                        var data = responseData[1];
+//                        if (data === goodLogin_RESPONSE) {
+//                            el.rem("login");
+//                            main();
+//                        } else {
+//                            check(resp);
+//                        }
+//                    }
+//                }, 500);
+//            }
+//
+//            var lateReply = true;
+//            var lateChecker = "";
+//            function manageLateReply() {
+//                if (lateReply) {
+//                    lateChecker = setTimeout(function () {
+//                        if (!resp) {
+//                            error("3 seconds passed, slow internet or wrong password.");
+//                        }
+//                    }, 3000);
+//                }
+//                lateReply = false;
+//            }
+
+            //main();
+            function main() {
+                initScreenSpace(scr.w, scr.h);
+                createHeader();
+                
+                check("To start drawing click Drawing Menu.");
+                check("To check various plots click Pick Plot.");
+                check("To check how it all works look in to code on this page.");
+                check("main() where it is all loaded.");
+                check("this is interface for javascript/ugraph.js, it has some examples");
+                check("the rest is messy, but can be figured out.");
+                check("if there is interest in this, email emnomage@yahoo.com.");
+                el.div(mc);
+//                createInputTableContainer();
+                setupGraph();
+            }
+
+            function createTableTask1(where) {
+                var matrix = task1;
+                var all = "<table BORDER=0 CELLPADDING=0 CELLSPACING=5 WIDTH=100% style=\"border-color:lightgrey\">";
+                all += toSpecialRow(0, matrix[0][0], 4, "nicetd");
+                all += toSpecialRow(0, matrix[1][0], 4, "nicetd");
+
+                for (var i = 2; i < matrix.length; i++) {
+                    all += toHTMLRow(getRow(matrix, i), i, "task1");
+                }
+
+                all += "</table>";
+                var id = "inputsContainer1";
+                createContainer(id, where, "transparent");
+                el.inn(id, all);
+                st(id, "position", "relative");
+            }
+
+            function createTableTask2(where) {
+                var matrix = task2;
+                var all = "<table BORDER=0 CELLPADDING=0 CELLSPACING=5 WIDTH=100% style=\"border-color:lightgrey\">";
+                all += toSpecialRow(0, matrix[0][0], 4, "nicetd");
+
+                for (var i = 1; i < matrix.length; i++) {
+                    all += toHTMLRow(getRow(matrix, i), i, "task2");
+                }
+
+                all += "</table>";
+                var id = "inputsContainer2";
+                createContainer(id, where, "transparent");
+                el.inn(id, all);
+                st(id, "position", "relative");
+            }
+
+            function createTableTask3(where) {
+                var matrix = task3;
+                var all = "<table BORDER=0 CELLPADDING=0 CELLSPACING=5 WIDTH=100% style=\"border-color:lightgrey\">";
+                all += toSpecialRow(0, matrix[0][0], 8, "nicetd");
+                all += toSpecialRow(0, matrix[1][0], 8, "nicetd");
+                all += toSpecialRow(0, matrix[2][0], 8, "nicetd");
+
+                for (var i = 3; i < matrix.length; i++) {
+                    all += toHTMLRow(getRow(matrix, i), i, "task3");
+                }
+
+                all += "</table>";
+                var id = "inputsContainer3";
+                createContainer(id, where, "transparent");
+                el.inn(id, all);
+                st(id, "position", "relative");
+            }
+
+            function createTableTask4(where) {
+                var matrix = task4;
+                var all = "<table BORDER=0 CELLPADDING=0 CELLSPACING=5 WIDTH=100% style=\"border-color:lightgrey\">";
+                all += toSpecialRow(0, matrix[0][0], 4, "nicetd");
+                all += toSpecialRow(0, matrix[1][0], 4, "nicetd");
+                all += toSpecialRow(0, matrix[2][0], 4, "nicetd");
+
+                for (var i = 3; i < matrix.length; i++) {
+                    all += toHTMLRow(getRow(matrix, i), i, "task4");
+                }
+
+                all += "</table>";
+                var id = "inputsContainer4";
+                createContainer(id, where, "transparent");
+                el.inn(id, all);
+                st(id, "position", "relative");
+            }
+
+            function showAllTasks() {
+                var id = "inputsContainer";
+                st(id + 1, "display", "table");
+                st(id + 2, "display", "table");
+                st(id + 3, "display", "table");
+                st(id + 4, "display", "table");
+            }
+            function hideAllTasks() {
+                var id = "inputsContainer";
+                st(id + 1, "display", "none");
+                st(id + 2, "display", "none");
+                st(id + 3, "display", "none");
+                st(id + 4, "display", "none");
+            }
+
+            function showTask(n) {
+                hideAllTasks();
+                var id = "inputsContainer";
+                st(id + n, "display", "table");
+            }
+
+            function createInputTableContainer() {
+                var id = "inputsContainer";
+                createContainer(id, mc, "rgba(250,250,250,0.5)");
+                createButton("Task 1", id, color.blue, function () {
+                    showTask(1);
+                });
+                createButton("Task 2", id, color.blue, function () {
+                    showTask(2);
+                });
+                createButton("Task 3", id, color.blue, function () {
+                    showTask(3);
+                });
+                createButton("Task 4", id, color.blue, function () {
+                    showTask(4);
+                });
+                createButton("Show All", id, color.green, function () {
+                    showAllTasks();
+                });
+                createButton("Hide All", id, color.red, function () {
+                    hideAllTasks();
+                });
+
+                st(id, "top", getScreenSpace().top + "px");
+                el.st(id, "width", 400 + "px");
+                st(id, "position", "absolute");
+                st(id, "zIndex", "10");
+                var ct = el.get(id);
+                var w = ct.offsetWidth - 2;
+                var h = ct.offsetHeight - 2;
+                updateScreenSpace(w, 0);
+
+                createTableTask1(id);
+                createTableTask2(id);
+                createTableTask3(id);
+                createTableTask4(id);
+
+                hideAllTasks();
+            }
+
+            function createHeader() {
+                var id = "header", story = "story";
+                el.div(id);
+                cls(id, "container border shadow");
+                st(id, "backgroundColor", "rgba(250,250,250,0.5)");
+                createText("Student: " + student.name, "header");
+                createContainer(story, id, "transparent");
+                st(story, "maxWidth", scr.w / 2 + "px");
+                createText(exercise.story, story, "rgb(0,0,0)", scr.w / 2, 5);
+
+                createButton("Drawing Menu", id, color2.green, function () {
+                    manageDrawingMenu();
+                });
+
+//                createButton("Settings", id, color2.green, function () {
+//                    manageSettingsMenu();
+//                });
+
+                createButton("Pick Plot", id, color2.blue, function () {
+                    managePlotMenu();
+                });
+
+//                enableSubmission();
+                var h = el.get(id).offsetHeight - 2;
+                st(id, "width", scr.w - getScreenSpace().marginBorder * 2 + "px");
+                st(id, "height", h + "px");
+                updateScreenSpace(0, h);
+            }
+
+//            function enableSubmission() {
+//                var typeOfSubmission = "binding-assay";
+//                var name = student.name;
+//                var bid = "Submit";
+//                var functionToSubmit = function () {
+//                    clearInterval(interval);
+//                    var userInputs = getAllInputs();
+//                    var imageInputs = getAllImageInputs();
+////                    var all = name + queryColumnSplitter + typeOfSubmission + queryColumnSplitter + userInputs + imageSplitIndicator + plotOneDataUrl + imageSplitIndicator + plotTwoDataUrl;
+////                    submVal(antagonistSubmission_POST, student.pw + "stringToSplitPasswordData" + all);
+//                    var all = name + queryColumnSplitter + typeOfSubmission + queryColumnSplitter + userInputs + imageSplitIndicator + imageInputs;
+//                    submVal(bindingAssaySubmission_POST, student.pw + "stringToSplitPasswordData" + all);
+//                };
+//
+//                if (!el.is(bid)) {
+//                    createButton(bid, "header", color.green, functionToSubmit);
+//                }
+//
+//                var interval = setInterval(function () {
+//                    var userInputs = getAllInputs();
+//                    if (inputOK(userInputs)) {
+//                        el.get(bid).textContent = bid;
+//                        el.get(bid).addEventListener("click", functionToSubmit);
+//                    } else {
+//                        el.get(bid).textContent = "Can't submit, there is bad input.";
+//                        el.get(bid).removeEventListener("click", functionToSubmit);
+//                    }
+//                }, 500);
+//            }
+
+            function getAllImageInputs() {
+                saveCurrentPlot();
+                return plotsDataUrls.join(imageSplitIndicator);
+            }
+
+            function inputOK(input) {
+                var cleanCopy1 = str.replSym(input, ".", "tempSplit1");
+                cleanCopy1 = str.replSym(cleanCopy1, ",", "tempSplit2");
+                var cleanCopy2 = str.noSym(cleanCopy1);
+                return cleanCopy2.length === cleanCopy1.length;
+            }
+
+            function getAllInputs() {
+                var task1 = getInputsTask1();
+                var task2 = getInputsTask2();
+                var task3 = getInputsTask3();
+                var task4 = getInputsTask4();
+                return task1 + userInputsSplitter + task2 + userInputsSplitter + task3 + userInputsSplitter + task4 + userInputsSplitter;
+            }
+
+            function getInputsTask1() {
+                var additionId = "task1-";
+                return getCleanInputsColumn(3, 3, 9, additionId);
+            }
+
+            function getInputsTask2() {
+                var additionId = "task2-";
+                var kd = getCleanInputsColumn(1, 2, 5, additionId);
+                var bmax = getCleanInputsColumn(2, 2, 5, additionId);
+                return kd + userInputTasksSplitter + bmax;
+            }
+
+            function getInputsTask3() {
+                var additionId = "task3-";
+                var bound1 = getCleanInputsColumn(3, 4, 14, additionId);
+                var bound2 = getCleanInputsColumn(5, 4, 14, additionId);
+                var bound3 = getCleanInputsColumn(7, 4, 14, additionId);
+
+                return bound1 + userInputTasksSplitter + bound2 + userInputTasksSplitter + bound3;
+            }
+
+            function getInputsTask4() {
+                var additionId = "task4-";
+                return getCleanInputsColumn(1, 4, 6, additionId);
+            }
+
+            function getCleanInputsColumn(column, startRow, endRow, additionId) {
+                var extraId = "";
+                if (additionId) {
+                    extraId = additionId;
+                }
+                var inputs = [];
+                for (var i = startRow; i <= endRow; i++) {
+                    inputs.push(str.replSym(el.from(extraId + column + "-" + i), ",", ""));
+                }
+                return inputs.join(",");
+            }
+
+            function getInputsRow(row, startRow, endRow, additionId) {
+                var extraId = "";
+                if (additionId) {
+                    extraId = additionId;
+                }
+                var inputs = [];
+                for (var i = startRow; i <= endRow; i++) {
+                    inputs.push(str.replSym(el.from(extraId + i + "-" + row), ",", ""));
+                }
+                return inputs.join(",");
+            }
+
+            function manageSettingsMenu() {
+                var menu = "menu";
+                if (!el.is(menu)) {
+                    disableDrawing();
+                    createMenu(menu, mc);
+                    var contrastChange = false;
+                    createButton("Contrast", menu, color.blue, function () {
+                        (contrastChange) ? contrastChange = false : contrastChange = true;
+                        (contrastChange) ? theme("white") : theme("rgba(250,250,250,0.5)");
+                    });
+                    createButton("Help", menu, color2.green, function () {
+                        check(helpMessage);
+                    });
+                    st(menu, "zIndex", 20);
+                    toCorner(menu);
+                } else {
+                    el.rem(menu);
+                }
+            }
+
+            function managePlotMenu() {
+                var menu = "menu";
+                if (!el.is(menu)) {
+                    disableDrawing();
+                    createMenu(menu, mc);
+
+                    createButton(exercise.dataOne.dataTitle, menu, color.blue, function () {
+                        activatePlot(0);
+                        el.rem(menu);
+                    });
+                    createButton(exercise.dataTwo.dataTitle, menu, color.blue, function () {
+                        activatePlot(1);
+                        el.rem(menu);
+                    });
+                    createButton(exercise.dataThree.dataTitle, menu, color.blue, function () {
+                        activatePlot(2);
+                        el.rem(menu);
+                    });
+                    createButton(exercise.dataFour.dataTitle, menu, color.blue, function () {
+                        activatePlot(3);
+                        el.rem(menu);
+                    });
+                    createButton(exercise.dataFive.dataTitle, menu, color.blue, function () {
+                        activatePlot(4);
+                        el.rem(menu);
+                    });
+                    st(menu, "zIndex", 20);
+                    toCorner(menu);
+                } else {
+                    el.rem(menu);
+                }
+            }
+
+//            function theme(color) {
+////                var elements = ["header", "inputsContainer", "graphContainer"];
+//                var elements = ["header", "graphContainer"];
+//                for (var i = 0; i < elements.length; i++) {
+//                    st(elements[i], "backgroundColor", color);
+//                }
+//            }
+
+            function manageDrawingMenu() {
+                disableDrawing();
+                var id = "drawMenu";
+                if (!el.is(id)) {
+                    createContainer(id, mc, "white");
+                    createButton("ChangeColor", id, userColor, function () {
+                        manageChangingColors();
+                    });
+                    createButton("Draw Points", id, userColor, function () {
+                        drawPoints();
+                        el.rem(id);
+                    });
+                    createButton("Draw Lines", id, userColor, function () {
+                        drawLines();
+                        el.rem(id);
+                    });
+                    createButton("Draw Curves", id, userColor, function () {
+                        manageDrawingSplines();
+                    });
+                    createButton("Delete Last Point", id, color2.red, function () {
+                        deleteLastPoint();
+                    });
+                    createButton("Delete Last Line", id, color2.red, function () {
+                        deleteLastLine();
+                    });
+                    createButton("Delete Last Curve", id, color2.red, function () {
+                        deleteLastCurve();
+                    });
+                    el.closeable(id);
+                    st(id, "zIndex", 20);
+                    toCorner(id);
+                } else {
+                    el.rem(id);
+                }
+            }
+
+            function manageChangingColors() {
+                var id1 = "drawMenu";
+                var id2 = "colorMenu";
+                if (!el.is(id2)) {
+                    createContainer(id2, mc, "white");
+                    createButton("Red", id2, color.red, function () {
+                        userColor = color.red;
+                        getGraph().setDrawingColor(color.red);
+                        close();
+                    });
+                    createButton("Blue", id2, color.blue, function () {
+                        userColor = color.blue;
+                        getGraph().setDrawingColor(userColor);
+                        close();
+                    });
+                    createButton("Green", id2, color.green, function () {
+                        userColor = color.green;
+                        getGraph().setDrawingColor(userColor);
+                        close();
+                    });
+                    createButton("Yellow", id2, color.yellow, function () {
+                        userColor = color.yellow;
+                        getGraph().setDrawingColor(userColor);
+                        close();
+                    });
+                    function close() {
+                        el.rem(id1);
+                        el.rem(id2);
+                    }
+                    st(id2, "zIndex", 20);
+                    toCorner(id2);
+                } else {
+                    el.rem(id2);
+                }
+            }
+
+            function manageDrawingSplines() {
+                getGraph().getGraphSettings().graphInfo = "";
+                var id = "drawMenu";
+                var id2 = "splineMenu";
+                if (!el.is(id2)) {
+                    createContainer(id2, mc, "white");
+                    createText("How many points to connect?", id2);
+                    var data = [4, 5, 6, 7, 8, 9, 10], select = "splineSelection";
+                    el.sel(select, id2, 3, data);
+                    createButton("Start", id2, color.blue, function () {
+                        drawSplines(el.from(select));
+                        el.rem(id2);
+                    });
+                    st(id2, "zIndex", 20);
+                    toCorner(id2);
+                } else {
+                    el.rem(id2);
+                }
+                el.rem(id);
+            }
+
+            function deleteLastPoint() {
+                getGraph().deleteLastPoint();
+            }
+            function deleteLastLine() {
+                getGraph().deleteLastLine();
+            }
+            function deleteLastCurve() {
+                getGraph().deleteLastSpline();
+            }
+
+            function drawSplines(n) {
+                getGraph().drawSplines(n);
+            }
+            function drawPoints() {
+                getGraph().drawPoints();
+            }
+            function drawLines() {
+                getGraph().drawLines();
+            }
+
+            function disableDrawing() {
+                getGraph().stopDrawing();
+            }
+
+            function setupGraph() {
+                var scrSpace = getScreenSpace();
+                createContainer(gc, "mainContainer", graphContainerBackgroundColor);
+                st(gc, "position", "absolute");
+                st(gc, "top", scrSpace.top + "px");
+                st(gc, "left", scrSpace.left + "px");
+
+                var w = scrSpace.w - scrSpace.marginBorder * 2;
+                var h = scrSpace.h - scrSpace.marginBorder * 2;
+
+                var canvas = "";
+                if (w < 800) {
+                    w = 800;
+                    h = 600;
+                    error("Screen is too small, graph is set to default 800x600");
+                }
+                if (w > h) {
+                    canvas = createGraphCanvas(canvasId, gc, w, h);
+                } else {
+                    canvas = createGraphCanvas(canvasId, gc, h, w);
+                }
+
+                for (var i = 0; i < plots.length; i++) {
+                    plotsSettings[i].canvas = canvas;
+                    plots[i] = new ugraph(plotsSettings[i]);
+                    plotsLiveSettings[i] = plots[i].getGraphSettings();
+                    plotsDataUrls[i] = el.get(canvasId).toDataURL("image/png");
+                }
+                currentGraph = plots[0];
+                activatePlot(0);
+            }
+
+            function changePlot() {
+                (graphOneLiveSettings.pause) ? enableGraphOne() : enableGraphTwo();
+            }
+
+            function pauseAllPlots() {
+                for (var i = 0; i < plotsLiveSettings.length; i++) {
+                    plotsLiveSettings[i].pause = true;
+                }
+            }
+
+            function saveCurrentPlot() {
+                plotsDataUrls[activePlot] = el.get(canvasId).toDataURL("image/png");
+            }
+
+            function activatePlot(n) {
+                saveCurrentPlot();
+                disableDrawing();
+                pauseAllPlots();
+
+                activePlot = n;
+                plotsLiveSettings[n].pause = false;
+
+                plotsLiveSettings[n].infoNearMouse = "";
+                currentGraph = plots[n];
+            }
+
+            function getGraph() {
+                return currentGraph;
+            }
+
+            function getCustomDisplayValue(val, rowId, columnId, additionId) {
+                if (isNumber(val)) {
+                    if (val === -1) {
+                        //(x,y) style of id and table coordinates
+                        return displayTableUserInput(defaultUserNoValue, columnId, rowId, additionId);
+                    } else {
+                        if (val === null) {
+                            return displayTableEmpty();
+                        }
+                        return displayTableOutput(val);
+                    }
+                } else {
+                    return displayTableText(val);
+                }
+            }
+
+//            function displayTableText(val) {
+//                return "<span style=''>" + val + "</span>";
+//            }
+//
+//            function displayTableUserInput(val, rowId, columnId, additionId) {
+//                //id coordinate style    inputname-x-y
+//                var id = additionId + "-" + rowId + "-" + columnId;
+//                return "<textarea id='" + id + "' type='text'  style='background-color:" + color2.green + ";' value='" + val + "'>" + val + "</textarea>";
+//                //debug
+////                return "<textarea id='" + id + "' type='text'  style='background-color:" + color2.green + ";' value='" + val + "'>" + Math.round(Math.random()*10) + "</textarea>";
+//            }
+//
+//            function displayTableEmpty() {
+//                return  "<div style='background-color:" + color2.yellow + ";'>" + "" + "</div>";
+//            }
+//
+//            function displayTableOutput(val) {
+//                return  "<textarea type='text'  style='background-color:" + color2.blue + ";' value='" + val + "'>" + val + "</textarea>";
+//            }
+//
+//            function isNumber(n) {
+//                return !isNaN(n);
+//            }
+//
+//            function toSpecialRow(start, text, width, clsIn) {
+//                var cls = "";
+//                if (clsIn) {
+//                    cls = clsIn;
+//                }
+//                if (start === 0) {
+//                    return "<tr><td class='" + cls + "' colspan='" + width + "'>" + text + "</td></tr>";
+//                }
+//                return "<tr><td  colspan='" + start + "'></td><td class='" + cls + "' colspan='" + width + "'>" + text + "</td></tr>";
+//            }
+//
+//            function toHTMLRow(rowArr, rowId, additionId) {
+//                var row = "";
+//                for (var i = 0; i < rowArr.length; i++) {
+//                    var val = rowArr[i];
+//                    if (val === null) {
+//                        row += columnHTML(getCustomDisplayValue(val, rowId, i, additionId));
+//                    } else {
+//                        row += columnHTML(getCustomDisplayValue(val, rowId, i, additionId), true);
+//                    }
+//
+//                }
+//                return  rowHTML(row);
+//            }
+//
+//            function columnHTML(s, nice) {
+//                if (nice) {
+//                    return "<td class='nicetd'>" + s + "</td>";
+//                }
+//                return "<td style='background-color:" + "rgba(250,250,250,0.5)" + ";'><center>" + s + "</center></td>";
+//            }
+//
+//            function rowHTML(s) {
+//                return "<tr>" + s + "</tr>";
+//            }
+//
+//            function getRow(matrix, whichRow) {
+//                //  isArrayH(matrix[0])
+//                var row = isArrayH(matrix[0]); //if matrix is vector then array is the row
+//                if (row.length > 1) {
+//                    row = matrix[whichRow];
+//                }
+//                return row;
+//            }
+//
+//            function getColumn(matrix, whichColumn) {
+//                var column = [];
+//                for (var i = 0; i < matrix.length; i++) {
+//                    column.push(matrix[i][whichColumn]);
+//                }
+//                return column;
+//            }
+
+            function createGraphCanvas(id, where, w, h) {
+                var layer = document.createElement("canvas");
+                layer.id = id;
+                layer.width = w;
+                layer.height = h;
+                document.getElementById(where).appendChild(layer);
+                return layer;
+            }
+
+            function copyObject(obj) {
+                var copy = {};
+                for (var attr in obj) {
+                    if (obj.hasOwnProperty(attr))
+                        copy[attr] = clone(obj[attr]);
+                }
+                return copy;
+            }
+        </script>
+    </body>
+</html>

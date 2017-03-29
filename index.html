@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<!--/**
+ * The MIT License (MIT) Copyright (c)
+ * 
+ * <2016><Gintaras Koncevicius>(@author Ubaby)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */-->
+<html lang='en'>
+    <head>
+        <title>Biotechnology Exercises</title>
+        <meta property='og:title' content="Cell Receptor and Drug Simulation"/>
+        <meta property='og:site_name' content='roflit.com'/>
+        <meta property='og:type' content='website'/>
+        <meta charset='UTF-8'>
+        <meta name='author' content='Ubaby'>
+        <!--root folder public_html/-->
+        <link rel='shortcut icon' href='public_html/favicon.ico' type='image/x-icon'/>
+              <link id='mainStyle' href='public_html/styles.css' rel='stylesheet' type='text/css'/>
+        <style>
+            body{
+                background-image: url("public_html/siteImages/bgr3.JPG");
+                background-color: #cccccc;
+                background-size:cover;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="mainContainer"></div>
+        <script src='public_html/javascript/allFunctions.js' type='text/javascript'></script>
+        <script>
+            //GLOBAL variables from custom library at ufunctions.js
+            var color = logo(), color2 = logo2(), cv = H.cnv, canvasObjects = [], resp = "", cvobj,
+                    ran = H.ran, check = H.check.nearMouse,
+                    el = H.el, st = el.st, str = H.str, cls = el.cls,
+                    num = H.num, o = H.obj, arr = H.arr,
+                    scr = getScreen(), movableElement = "",
+                    fullRadian = Math.PI * 2, canMove = false, movableElement = "";
+
+//container variables
+            var mc = "mainContainer";
+            var lc = "linkContainer";
+
+            var excerciseTitles = {
+                ex1: "Agonists",
+                ex2: "Antagonists",
+                ex3: "Binding Assay",
+                ex4: "Pharmacokinetics"
+            };            
+            var excerciseLinks = {
+                ex1: "public_html/agonists.html",
+                ex2: "public_html/antagonists.html",
+                ex3: "public_html/binding-assay.html",
+                ex4: "public_html/pharmacokinetics.html"
+            };
+			
+			var demoTitles = {
+                ex1: "Agonists (demo)",
+                ex2: "Antagonists (demo)",
+                ex3: "Binding Assay (demo)",
+                ex4: "Pharmacokinetics (demo)",
+                ex5: "Interactive Graph (demo)"
+            };
+			
+			var demoLinks = {
+                ex1: "public_html/agonists-demo.html",
+                ex2: "public_html/antagonists-demo.html",
+                ex3: "public_html/binding-assay-demo.html",
+                ex4: "public_html/pharmacokinetics-demo.html",
+                ex5: "public_html/interactive-graph-demo.html"
+            };
+
+            createContainer(lc, mc, "transparent");
+            createText("DEMO Links(disable)", lc);
+            createLink(demoTitles.ex1, lc, demoLinks.ex1);
+            createLink(demoTitles.ex2, lc, demoLinks.ex2);
+            createLink(demoTitles.ex3, lc, demoLinks.ex3);
+            createLink(demoTitles.ex4, lc, demoLinks.ex4);
+            createLink(demoTitles.ex5, lc, demoLinks.ex5);
+			
+            createText("Excercise Links", lc);
+            createLink(excerciseTitles.ex1, lc, excerciseLinks.ex1);
+            createLink(excerciseTitles.ex2, lc, excerciseLinks.ex2);
+            createLink(excerciseTitles.ex3, lc, excerciseLinks.ex3);
+            createLink(excerciseTitles.ex4, lc, excerciseLinks.ex4);
+			
+//            createText("Exercises designed By:", lc);
+//            createText("Dr Samir Shawgy Ayoub", lc);
+
+            putContainerToMiddle(lc);
+            function putContainerToMiddle(id) {
+                st(id, "height", "170px");
+                st(id, "width", "215px");
+                toCorner(lc);
+            }
+
+        </script>
+    </body>
+</html>
