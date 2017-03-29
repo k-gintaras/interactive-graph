@@ -18,12 +18,13 @@ binding assay Example:
  to create database from given sql or modify (studentDBM and lecturerDBM to store and retrieve data in other way)
  
  current database connection settings in lecturerDBM.php and studentDBM.php:
+```sql
 $GLOBALS["myErrors"] = "\n";
 $GLOBALS["dbhost"] = "localhost";
 $GLOBALS["dbname"] = "organbathsimulation";
 $GLOBALS["dbuser"] = "root";
 $GLOBALS["dbpass"] = "";
- 
+```
 ## Lecturer's page is at 
 public_html/lecturer.html
 
