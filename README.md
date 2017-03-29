@@ -1,3 +1,10 @@
+This interractive graph allows you to draw points, lines and curves on it while keeping track point coordinates.
+
+It might be extended in future to calculate results from input, because it is a matrix of points that detect which one was clicked and what value it is supposed to represent given the range of min and max for the graph.
+
+It can also be used to display certain charts and data.
+
+
 ## To find out "why" scroll to the bottom where it is explained
 
 ## To test it either run it on server and view demo links in the index.html
